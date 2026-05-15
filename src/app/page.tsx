@@ -192,86 +192,26 @@ export default function HomePage() {
       </section>
 
       {/* ── Product card ─────────────────────────────────── */}
-      <section className="py-section px-6">
-        <div className="mx-auto max-w-6xl">
-          <FadeIn>
-            <div className="premium-lift relative overflow-hidden rounded-xl bg-surface-card border border-hairline px-12 py-16 md:px-20 md:py-20">
-
-              {/* Watermark mark */}
-              <SapientiaMark
-                decorative
-                className="pointer-events-none select-none absolute right-[-1rem] bottom-[-4rem] h-[min(85vw,20rem)] w-auto opacity-[0.07]"
-              />
-
-              <p className="type-caption-upper text-muted mb-5">Built around you</p>
-
-              <h2
-                className="text-ink mb-6 max-w-2xl"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)",
-                  fontWeight: 500,
-                  lineHeight: 1.15,
-                  letterSpacing: "-0.04rem",
-                }}
-              >
-                A counsellor that actually knows you.
-              </h2>
-
-              <p className="type-body-md text-body max-w-lg mb-10 leading-relaxed">
-                Sapientia starts with your profile — grades, interests, extracurriculars, finances — and
-                builds everything from there. Every recommendation and every deadline is specific to you,
-                not a generic cohort.
-              </p>
-
-              <Link
-                href="/auth?mode=signup"
-                className="group subtle-sheen inline-flex items-center gap-2.5 h-11 px-6 text-sm font-medium font-sans rounded-md bg-primary text-on-primary hover:bg-primary-active transition-all duration-200 overflow-hidden"
-              >
-                Build my profile
-                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ── Final CTA (pre-footer bridge) — dark surface band per design system ── */}
+      {/* ── Final CTA ────────────────────────────────────── */}
       <section id="pricing" className="bg-canvas py-section px-6 pb-10">
         <div className="mx-auto max-w-6xl">
           <FadeIn>
-            <div className="premium-lift relative overflow-hidden rounded-2xl border border-white/10 bg-surface-dark px-8 py-20 text-center shadow-[0_24px_56px_rgba(24,23,21,0.28)] sm:rounded-3xl sm:px-14 hover:border-primary/25">
-              <div
-                className="pointer-events-none absolute -right-16 top-1/2 h-[22rem] w-[22rem] -translate-y-1/2 rounded-full opacity-[0.38] blur-3xl"
-                style={{
-                  background:
-                    "radial-gradient(closest-side, color-mix(in srgb, var(--color-primary) 42%, transparent), transparent 72%)",
-                }}
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full opacity-[0.14] blur-3xl"
-                style={{
-                  background:
-                    "radial-gradient(closest-side, color-mix(in srgb, var(--color-accent-amber) 30%, transparent), transparent 70%)",
-                }}
-                aria-hidden
-              />
-              <SapientiaMark className="relative z-[1] mx-auto mb-7 h-14 w-auto opacity-95" decorative />
-              <h2 className="type-display-lg relative z-[1] mb-4 text-on-dark">
+            <div className="premium-lift relative overflow-hidden rounded-2xl border border-hairline bg-surface-card px-8 py-20 text-center sm:rounded-3xl sm:px-14 hover:border-primary/30">
+              <SapientiaMark className="relative z-[1] mx-auto mb-7 h-14 w-auto opacity-20" decorative />
+              <h2 className="type-display-lg relative z-[1] mb-4 text-ink">
                 Your counsellor is waiting.
               </h2>
-              <p className="relative z-[1] mx-auto mb-10 max-w-md type-body-md leading-relaxed text-on-dark-soft">
+              <p className="relative z-[1] mx-auto mb-10 max-w-md type-body-md leading-relaxed text-body">
                 Join students across India getting the edge they deserve — at no cost.
               </p>
               <Link
                 href="/auth?mode=signup"
-                className="group subtle-sheen relative z-[1] inline-flex h-14 items-center gap-2.5 overflow-hidden rounded-pill bg-primary px-10 text-base font-medium text-on-primary shadow-[0_14px_36px_color-mix(in_srgb,var(--color-primary)_35%,transparent)] transition-all duration-200 hover:bg-primary-active"
+                className="group subtle-sheen relative z-[1] inline-flex h-14 items-center gap-2.5 overflow-hidden rounded-pill bg-primary px-10 text-base font-medium text-on-primary shadow-[0_14px_36px_color-mix(in_srgb,var(--color-primary)_25%,transparent)] transition-all duration-200 hover:bg-primary-active"
               >
                 Get started for free
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
-              <p className="relative z-[1] mt-6 type-caption text-on-dark-soft">
+              <p className="relative z-[1] mt-6 type-caption text-muted">
                 Always free · Built for India
               </p>
             </div>
