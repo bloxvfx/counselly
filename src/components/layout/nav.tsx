@@ -6,8 +6,8 @@ import { SapientiaMark } from "@/components/brand/sapientia-mark";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Features", href: "#features" },
-  { label: "Pricing",  href: "#pricing" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing",  href: "/pricing" },
 ];
 
 export function Nav() {
@@ -29,13 +29,13 @@ export function Nav() {
 
         <nav className="hidden md:flex items-center gap-2">
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               className="text-base font-medium text-muted hover:text-ink transition-colors px-4 py-2 rounded-md hover:bg-surface-soft"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -53,14 +53,14 @@ export function Nav() {
       {open && (
         <div className="md:hidden bg-canvas px-6 py-4 flex flex-col gap-1 shadow-sm">
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
               className="text-base text-body py-3 border-b border-hairline-soft last:border-0"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </div>
       )}

@@ -131,19 +131,19 @@ export function SiteFooter() {
                     </InPageAnchor>
                   </li>
                   <li>
-                    <InPageAnchor
-                      href="#pricing"
+                    <Link
+                      href="/pricing"
                       className="type-body-md font-medium text-ink transition-colors hover:text-primary"
                     >
                       Pricing
-                    </InPageAnchor>
+                    </Link>
                   </li>
                   <li>
                     <Link
-                      href="/auth?mode=signup"
+                      href="/auth"
                       className="type-body-md font-medium text-primary transition-colors hover:text-primary-active"
                     >
-                      Create account
+                      Get started
                     </Link>
                   </li>
                 </ul>

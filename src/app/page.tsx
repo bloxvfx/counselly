@@ -74,7 +74,7 @@ export default function HomePage() {
 
                 <div className="flex flex-wrap gap-3">
                   <Link
-                    href="/auth?mode=signup"
+                    href="/auth"
                     className="group subtle-sheen inline-flex items-center gap-2.5 px-8 font-medium font-sans rounded-md bg-primary text-on-primary hover:bg-primary-active transition-all duration-200 overflow-hidden"
                     style={{ height: "3.25rem", fontSize: "1rem" }}
                   >
@@ -205,7 +205,7 @@ export default function HomePage() {
                 Join students across India getting the edge they deserve — at no cost.
               </p>
               <Link
-                href="/auth?mode=signup"
+                href="/auth"
                 className="group subtle-sheen relative z-[1] inline-flex h-14 items-center gap-2.5 overflow-hidden rounded-pill bg-primary px-10 text-base font-medium text-on-primary shadow-[0_14px_36px_color-mix(in_srgb,var(--color-primary)_25%,transparent)] transition-all duration-200 hover:bg-primary-active"
               >
                 Get started for free
