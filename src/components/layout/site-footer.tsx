@@ -163,6 +163,11 @@ export function SiteFooter() {
                       Terms
                     </Link>
                   </li>
+                  <li>
+                    <Link href="#" className="type-body-md font-medium text-ink transition-colors hover:text-primary">
+                      Disclaimer
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </div>
