@@ -37,7 +37,7 @@ function IconGithub({ className }: { className?: string }) {
 
 const socialLinks = [
   { label: "Sapientia on X", href: "https://x.com", Icon: IconX },
-  { label: "Sapientia on Instagram", href: "https://instagram.com", Icon: IconInstagram },
+  { label: "Sapientia on Instagram", href: "https://www.instagram.com/sapientia.learning/", Icon: IconInstagram },
   { label: "Sapientia on LinkedIn", href: "https://linkedin.com", Icon: IconLinkedIn },
   { label: "Sapientia on GitHub", href: "https://github.com", Icon: IconGithub },
 ] as const;
