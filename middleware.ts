@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { getSupabaseEnv } from "@/lib/supabase/env";
 
 const PROTECTED = ["/dashboard", "/onboarding"];
 
@@ -16,14 +17,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
+  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
+  const env = getSupabaseEnv();
   const response = NextResponse.next({ request });
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  if (!env) {
+    if (isProtected) {
+      const loginUrl = new URL("/auth", request.url);
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return response;
+  }
+
+  const supabase = createServerClient(env.url, env.key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -41,8 +48,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
-  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
 
   if (isProtected && !session) {
     const loginUrl = new URL("/auth", request.url);
