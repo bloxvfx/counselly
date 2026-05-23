@@ -18,11 +18,10 @@ function getMode(v: string | string[] | undefined): AuthMode {
 
 const d = (ms: string) => ({ "--reveal-delay": ms }) as CSSProperties;
 
-const FEATURES = [
-  { label: "College list",      detail: "Match · Reach · Safety" },
-  { label: "Essay workspace",   detail: "AI-assisted drafts"     },
-  { label: "Deadlines",         detail: "Never miss a date"      },
-  { label: "Scholarships",      detail: "India-specific funding" },
+const OUTCOMES = [
+  { label: "College list",   detail: "Match · Reach · Safety" },
+  { label: "Essays",         detail: "AI-guided, your voice"  },
+  { label: "Deadlines",      detail: "Zero missed dates"      },
 ];
 
 export default async function AuthPage({
@@ -30,74 +29,78 @@ export default async function AuthPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params    = await searchParams;
-  const mode      = getMode(params.mode);
-  const nextPath  = readParam(params.next) || "/dashboard";
-  const configured = Boolean(getSupabaseEnv());
-  const supabase  = await createClient();
+  const params      = await searchParams;
+  const mode        = getMode(params.mode);
+  const nextPath    = readParam(params.next) || "/dashboard";
+  const configured  = Boolean(getSupabaseEnv());
+  const supabase    = await createClient();
   const { data: { user } } = supabase
     ? await supabase.auth.getUser()
     : { data: { user: null } };
 
   return (
-    <main className="min-h-screen bg-canvas">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 xl:px-10">
+    <main className="h-screen overflow-hidden bg-canvas flex flex-col">
+      <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-6 xl:px-10">
 
         {/* Nav */}
-        <header className="flex h-16 shrink-0 items-center justify-between">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-hairline">
           <Link href="/" className="flex items-center gap-2.5 group">
             <SapientiaMark className="h-6 transition-opacity group-hover:opacity-60" decorative />
             <span className="font-display text-[1.25rem] font-[400] tracking-tight text-ink">
               Sapientia
             </span>
           </Link>
-          <Link href="/" className="type-nav text-muted transition-colors hover:text-ink">
-            ← Home
+          <Link
+            href="/"
+            className="type-caption text-muted transition-colors hover:text-ink flex items-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            Home
           </Link>
         </header>
 
-        {/* Two-column body */}
-        <div className="grid flex-1 items-center pb-16 pt-6 lg:grid-cols-[minmax(0,26rem)_22rem] lg:gap-14 xl:grid-cols-[minmax(0,30rem)_24rem] xl:gap-16 justify-center">
+        {/* Two-column body — vertically centred, fills remaining height */}
+        <div className="grid flex-1 min-h-0 items-center lg:grid-cols-[minmax(0,28rem)_24rem] lg:gap-20 xl:grid-cols-[minmax(0,32rem)_28rem] xl:gap-24 justify-center">
 
-          {/* ── Left: marketing ── */}
-          <div className="hidden min-w-0 lg:flex lg:flex-col">
-            <div className="hero-reveal mb-7 flex items-center gap-2" style={d("60ms")}>
-              <span className="text-primary" aria-hidden style={{ fontSize: "0.8rem" }}>✦</span>
-              <span className="type-caption-upper text-muted">Your personal college counsellor</span>
+          {/* ── Left ── */}
+          <div className="hidden min-w-0 overflow-visible lg:flex lg:flex-col gap-8">
+
+            {/* Eyebrow */}
+            <div className="hero-reveal flex items-center gap-2.5" style={d("60ms")}>
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />
+              <span className="type-caption-upper text-muted">Built for Indian students</span>
             </div>
 
-            {/* Each line is a div so block display is guaranteed (hero-word uses inline-block) */}
-            <h1 className="mb-6" style={{ lineHeight: 0.97 }}>
-              <div className="hero-word type-display-xl text-ink"  style={{ display: "block", ...d("120ms") }}>Your admissions</div>
-              <div className="hero-word type-display-xl"           style={{ display: "block", color: "var(--color-primary)", ...d("240ms") }}>plan remembers</div>
-              <div className="hero-word type-display-xl text-ink"  style={{ display: "block", ...d("360ms") }}>you.</div>
-            </h1>
+            {/* Headline — wider than column so copy stays on two lines */}
+            <div className="w-max max-w-none">
+              <h1 style={{ lineHeight: 0.95 }}>
+                <div className="hero-word type-display-xl text-ink whitespace-nowrap"  style={{ display: "block", ...d("120ms") }}>Get into the college</div>
+                <div className="hero-word type-display-xl whitespace-nowrap"           style={{ display: "block", color: "var(--color-primary)", ...d("240ms") }}>you want.</div>
+              </h1>
+            </div>
 
-            <p className="hero-reveal type-body-md text-body leading-relaxed mb-8" style={d("460ms")}>
-              Build your profile once. Sapientia turns it into a college list,
-              essay prompts, deadlines, and scholarship matches — all tailored to you.
-            </p>
-
-            <div className="hero-reveal grid grid-cols-2 gap-2 mb-6" style={d("540ms")}>
-              {FEATURES.map((f) => (
-                <div key={f.label}
-                  className="rounded-lg border border-hairline bg-surface-soft px-3.5 py-3 transition-colors hover:bg-surface-card">
-                  <p className="type-caption text-ink">{f.label}</p>
-                  <p className="mt-0.5 text-muted-soft" style={{ fontSize: "0.7rem", fontWeight: 500 }}>{f.detail}</p>
+            {/* Outcome rows */}
+            <div className="hero-reveal flex flex-col" style={d("460ms")}>
+              {OUTCOMES.map((item, i) => (
+                <div
+                  key={item.label}
+                  className={`flex items-center justify-between py-3 ${i < OUTCOMES.length - 1 ? "border-b border-hairline" : ""}`}
+                >
+                  <span className="type-caption text-ink">{item.label}</span>
+                  <span className="type-caption text-muted">{item.detail}</span>
                 </div>
               ))}
             </div>
 
-            <div className="hero-reveal flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-3" style={d("620ms")}>
-              <span className="text-primary shrink-0 mt-px" aria-hidden style={{ fontSize: "0.8rem" }}>✦</span>
-              <div>
-                <p className="type-caption text-ink">Already on Lerno?</p>
-                <p className="mt-0.5 type-body-sm text-muted">Same account — no new signup needed.</p>
-              </div>
-            </div>
+            {/* Lerno */}
+            <p className="hero-reveal type-body-sm text-muted" style={d("560ms")}>
+              <span className="font-medium text-ink">Already on Lerno?</span>{" "}Same account.
+            </p>
           </div>
 
-          {/* ── Right: panel ── */}
+          {/* ── Right: auth panel ── */}
           <div className="hero-reveal-soft min-w-0 w-full" style={d("80ms")}>
             <AuthPanel
               initialMode={mode}
