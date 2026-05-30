@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
-import { SmoothScroll } from "@/components/layout/smooth-scroll";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -25,12 +24,12 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sapientia — Your Personal College Counsellor",
+  title: "Counselly — Your Personal College Counsellor",
   description:
     "AI-powered college counselling for every Indian student. Get the guidance, clarity, and roadmap that was once only available to the privileged few.",
   icons: {
-    icon: [{ url: "/Sapientia.svg", type: "image/svg+xml" }],
-    apple: "/Sapientia.svg",
+    icon: [{ url: "/counselly.svg", type: "image/svg+xml" }],
+    apple: "/counselly.svg",
   },
 };
 
@@ -45,7 +44,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas text-body">
-        <SmoothScroll>{children}</SmoothScroll>
+        {children}
       </body>
     </html>
   );

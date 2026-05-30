@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { InPageAnchor } from "@/components/layout/in-page-anchor";
 
 function IconX({ className }: { className?: string }) {
@@ -36,10 +36,10 @@ function IconGithub({ className }: { className?: string }) {
 }
 
 const socialLinks = [
-  { label: "Sapientia on X", href: "https://x.com", Icon: IconX },
-  { label: "Sapientia on Instagram", href: "https://www.instagram.com/sapientia.learning/", Icon: IconInstagram },
-  { label: "Sapientia on LinkedIn", href: "https://linkedin.com", Icon: IconLinkedIn },
-  { label: "Sapientia on GitHub", href: "https://github.com", Icon: IconGithub },
+  { label: "Counselly on X", href: "https://x.com", Icon: IconX },
+  { label: "Counselly on Instagram", href: "https://www.instagram.com/counselly.learning/", Icon: IconInstagram },
+  { label: "Counselly on LinkedIn", href: "https://linkedin.com", Icon: IconLinkedIn },
+  { label: "Counselly on GitHub", href: "https://github.com", Icon: IconGithub },
 ] as const;
 
 export function SiteFooter() {
@@ -71,24 +71,19 @@ export function SiteFooter() {
             aria-hidden
           />
 
-          <SapientiaMark
+          <CounsellyMark
             decorative
-            className="pointer-events-none absolute -right-4 bottom-[-3.5rem] h-[min(52vw,14rem)] w-auto opacity-[0.09] sm:h-[min(42vw,17rem)]"
+            className="pointer-events-none absolute -right-4 bottom-[-3.5rem] h-[min(52vw,18rem)] w-auto opacity-[0.09] sm:h-[min(42vw,22rem)]"
           />
 
           <div className="relative z-10 mx-auto max-w-6xl px-6 pb-10 pt-14 sm:px-8 sm:pb-12 sm:pt-16">
             <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.5fr)_minmax(0,0.5fr)] lg:gap-16">
               {/* Brand */}
               <div className="max-w-md">
-                <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <SapientiaMark className="h-9 w-auto sm:h-10" decorative />
-                  <span
-                    className="text-ink tracking-tight"
-                    style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.35rem, 2.5vw, 1.75rem)", fontWeight: 500 }}
-                  >
-                    Sapientia
-                  </span>
-                </div>
+                <Link href="/" className="mb-6 flex flex-wrap items-center gap-2 group hover:opacity-80 transition-opacity">
+                  <CounsellyMark className="h-8 w-auto sm:h-10" decorative />
+                  <CounsellyText className="h-[14px] sm:h-[18px] w-auto" />
+                </Link>
 
                 <p className="type-body-md text-body mb-6 max-w-sm leading-relaxed">
                   AI-powered college counselling for every Indian student — timelines, essays, lists, and answers that
@@ -174,7 +169,7 @@ export function SiteFooter() {
 
             <div className="mt-14 flex flex-col gap-6 border-t border-hairline pt-8 sm:flex-row sm:items-center sm:justify-between">
               <p className="type-body-sm text-muted-soft order-2 sm:order-1">
-                © {new Date().getFullYear()} Sapientia. All rights reserved.
+                © {new Date().getFullYear()} Counselly. All rights reserved.
               </p>
               <div className="order-1 flex items-center gap-1 sm:order-2 sm:justify-end">
                 {socialLinks.map(({ label, href, Icon }) => (

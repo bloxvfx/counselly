@@ -1,6 +1,6 @@
 import { CheckCircle2, Circle } from "lucide-react";
 import type { CSSProperties } from "react";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark } from "@/components/brand/counselly-mark";
 
 const colleges = [
   { name: "IIT Delhi",         branch: "Computer Science",  tag: "Reach", fit: 74, tagStyle: "bg-accent-amber/10 text-accent-amber"   },
@@ -31,9 +31,9 @@ export function DashboardMockup() {
           <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
         </div>
         <div className="flex-1 flex justify-center">
-          <div className="bg-canvas rounded-md px-4 py-1 flex items-center gap-2 border border-hairline">
-            <SapientiaMark className="h-3 w-auto" decorative />
-            <span className="text-muted text-xs">sapientia.app/dashboard</span>
+          <div className="bg-canvas rounded-md px-4 py-1.5 flex items-center gap-1.5 border border-hairline">
+            <CounsellyMark className="h-4 w-auto" decorative />
+            <span className="text-muted text-xs">counselly.app/dashboard</span>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@ export function DashboardMockup() {
           </div>
           <div className="text-right">
             <p className="text-muted text-xs">Application progress</p>
-            <p className="text-primary text-sm font-medium mt-0.5">68% complete</p>
+            <p className="text-primary text-sm font-medium mt-0.5">67% complete</p>
           </div>
         </div>
 
@@ -110,11 +110,11 @@ export function DashboardMockup() {
         {/* AI chat strip */}
         <div className="mockup-enter bg-surface-soft rounded-xl p-4 border border-hairline-soft" style={mockupDelay("1820ms")}>
           <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
-              <SapientiaMark className="h-3 w-auto" decorative />
+            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+              <CounsellyMark className="h-3 w-auto" decorative />
             </div>
             <div>
-              <p className="text-ink text-xs font-medium mb-1">Sapientia</p>
+              <p className="text-ink text-xs font-medium mb-1">Counselly</p>
               <p className="text-muted text-xs leading-relaxed">
                 Your JEE score puts BITS Pilani CS well within reach. I&apos;d prioritise your SOP this week — want me to draft it based on your profile?
               </p>

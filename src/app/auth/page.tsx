@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
@@ -43,12 +43,10 @@ export default async function AuthPage({
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-6 xl:px-10">
 
         {/* Nav */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-hairline">
+        <header className="flex h-24 shrink-0 items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <SapientiaMark className="h-6 transition-opacity group-hover:opacity-60" decorative />
-            <span className="font-display text-[1.25rem] font-[400] tracking-tight text-ink">
-              Sapientia
-            </span>
+            <CounsellyMark className="h-9 transition-opacity group-hover:opacity-60" decorative />
+            <CounsellyText className="h-[18px] w-auto transition-opacity group-hover:opacity-60" />
           </Link>
           <Link
             href="/"

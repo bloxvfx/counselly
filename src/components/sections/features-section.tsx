@@ -287,7 +287,7 @@ function ChatVisual() {
     <div className="w-full rounded-xl border border-hairline bg-canvas overflow-hidden">
       <div className="bg-surface-soft px-5 py-3.5 border-b border-hairline flex items-center gap-2">
         <MessageSquare className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
-        <span className="text-ink text-xs font-medium">Ask Sapientia</span>
+        <span className="text-ink text-xs font-medium">Ask Counselly</span>
         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-success" />
       </div>
       <div className="p-4 space-y-3 max-h-72 overflow-y-auto" data-lenis-prevent>
@@ -351,7 +351,7 @@ const features = [
     n: "03",
     title: "Essay guidance & review",
     description:
-      "Brainstorm, outline, and draft every essay with real-time AI feedback. Sapientia flags clichés, weak openings, and missed opportunities — just like a human counsellor would.",
+      "Brainstorm, outline, and draft every essay with real-time AI feedback. Counselly flags clichés, weak openings, and missed opportunities — just like a human counsellor would.",
     Visual: EssayVisual,
   },
   {
@@ -372,7 +372,7 @@ const features = [
     n: "06",
     title: "Ask anything, get real answers",
     description:
-      "Have a question at 11pm before a deadline? Ask Sapientia. It knows your profile, your colleges, and your timeline — so answers are specific to you, not generic advice.",
+      "Have a question at 11pm before a deadline? Ask Counselly. It knows your profile, your colleges, and your timeline — so answers are specific to you, not generic advice.",
     Visual: ChatVisual,
   },
 ];
@@ -418,7 +418,7 @@ export function FeaturesSection() {
           transition={{ duration: 0.6, ease }}
           className="mb-20"
         >
-          <p className="type-caption-upper text-muted mb-4">What Sapientia does</p>
+          <p className="type-caption-upper text-muted mb-4">What Counselly does</p>
           <h2 className="type-display-md text-ink max-w-xl">
             Everything a counsellor does,<br />available to everyone.
           </h2>

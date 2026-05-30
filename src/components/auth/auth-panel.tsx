@@ -185,7 +185,7 @@ export function AuthPanel({
         <p className="type-body-sm text-muted mb-6">
           Signed in as <span className="font-medium text-ink">{userEmail}</span>.
         </p>
-        <Link href={nextPath} className={btnPrimary}>Continue to Sapientia</Link>
+        <Link href={nextPath} className={btnPrimary}>Continue to Counselly</Link>
         <form action="/auth/signout" method="post" className="mt-2.5">
           <button type="submit" className={btnGhost}>Sign out</button>
         </form>
@@ -231,7 +231,7 @@ export function AuthPanel({
             {mode === "reset"  && "Choose a new password"}
           </h1>
           <p className="type-body-sm text-muted">
-            {mode === "login"  && "Sign in to your Sapientia workspace."}
+            {mode === "login"  && "Sign in to your Counselly workspace."}
             {mode === "signup" && "Join students planning smarter admissions."}
             {mode === "forgot" && "We'll send a secure link to your inbox."}
             {mode === "reset"  && "Use a password you don't use elsewhere."}

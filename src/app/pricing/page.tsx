@@ -211,7 +211,7 @@ export default function PricingPage() {
                       </div>
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-soft" strokeWidth={1.5} />
                       <div className="text-right">
-                        <p className="type-caption text-primary mb-0.5">Sapientia today</p>
+                        <p className="type-caption text-primary mb-0.5">Counselly today</p>
                         <p
                           className="text-primary"
                           style={{

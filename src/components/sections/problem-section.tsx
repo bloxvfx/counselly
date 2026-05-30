@@ -152,7 +152,7 @@ export function ProblemSection() {
           className="flex flex-col sm:flex-row sm:items-center gap-4"
         >
           <p className="type-body-md text-muted max-w-lg leading-relaxed">
-            Sapientia closes that gap — AI-powered guidance, personalised to every student, at no cost.
+            Counselly closes that gap — AI-powered guidance, personalised to every student, at no cost.
           </p>
           <span className="hidden sm:block h-px flex-1 bg-hairline" />
           <span className="text-primary text-xl shrink-0" style={{ fontFamily: "var(--font-display)" }} aria-hidden>

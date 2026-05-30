@@ -57,6 +57,22 @@ export async function middleware(request: NextRequest) {
     return redirect;
   }
 
+  // Redirect logged-in users away from auth pages and the landing page
+  const AUTH_ROUTES = ["/auth", "/login", "/signup"];
+  const isAuthRoute =
+    (AUTH_ROUTES.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/") &&
+    !pathname.startsWith("/auth/callback") &&
+    !pathname.startsWith("/auth/signout");
+
+  const isResetMode = pathname === "/auth" && request.nextUrl.searchParams.get("mode") === "reset";
+
+  if (session && isAuthRoute && !isResetMode) {
+    const dashboardUrl = new URL("/dashboard", request.url);
+    const redirect = NextResponse.redirect(dashboardUrl);
+    response.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
+    return redirect;
+  }
+
   return response;
 }
 

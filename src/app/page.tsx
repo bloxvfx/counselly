@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ArrowRight, UserCircle, Compass, CheckCircle2 } from "lucide-react";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark } from "@/components/brand/counselly-mark";
 import { Nav } from "@/components/layout/nav";
+import { SmoothScroll } from "@/components/layout/smooth-scroll";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { FadeIn } from "@/components/ui/motion";
 import { DashboardMockup } from "@/components/ui/dashboard-mockup";
@@ -17,7 +18,7 @@ const steps = [
     Icon: UserCircle,
     n: "01",
     title: "Build your profile",
-    body: "Tell Sapientia who you are — your grades, interests, schools you're eyeing, and what matters to you.",
+    body: "Tell Counselly who you are — your grades, interests, schools you're eyeing, and what matters to you.",
   },
   {
     Icon: Compass,
@@ -45,7 +46,7 @@ const revealDelay = (delay: string) => ({ "--reveal-delay": delay }) as CSSPrope
 
 export default function HomePage() {
   return (
-    <>
+    <SmoothScroll>
       <Nav />
 
       {/* ── Hero ─────────────────────────────────────────── */}
@@ -197,7 +198,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <FadeIn>
             <div className="premium-lift relative overflow-hidden rounded-2xl border border-hairline bg-surface-card px-8 py-20 text-center sm:rounded-3xl sm:px-14 hover:border-primary/30">
-              <SapientiaMark className="relative z-[1] mx-auto mb-7 h-14 w-auto opacity-20" decorative />
+              <CounsellyMark className="relative z-[1] mx-auto mb-7 h-12 w-auto opacity-20" decorative />
               <h2 className="type-display-lg relative z-[1] mb-4 text-ink">
                 Your counsellor is waiting.
               </h2>
@@ -220,6 +221,6 @@ export default function HomePage() {
       </section>
 
       <SiteFooter />
-    </>
+    </SmoothScroll>
   );
 }
