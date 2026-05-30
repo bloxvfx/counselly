@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark } from "@/components/brand/counselly-mark";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -17,29 +17,29 @@ export function Nav() {
     <header className="sticky top-0 z-50 h-24 bg-canvas/92 backdrop-blur-md">
       <div className="mx-auto w-full max-w-6xl h-full px-6 lg:px-8 flex items-center justify-between">
 
-        <Link href="/" className="flex items-center gap-3">
-          <SapientiaMark className="h-10 w-auto md:h-12" decorative priority />
-          <span
-            className="text-ink tracking-tight"
-            style={{ fontFamily: "var(--font-display)", fontSize: "1.625rem", fontWeight: 500 }}
-          >
-            Sapientia
+        <Link href="/" className="flex items-center gap-2">
+          <CounsellyMark className="h-10 w-auto md:h-12" decorative priority />
+          <span className="type-wordmark text-ink text-[1.8rem] md:text-[1.95rem]">
+            Counselly
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-2">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-base font-medium text-muted hover:text-ink transition-colors px-4 py-2 rounded-md hover:bg-surface-soft"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center">
+          <nav className="flex items-center gap-1">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-base font-medium text-muted hover:text-ink transition-colors px-4 py-2 rounded-md hover:bg-surface-soft"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-        {/* Mobile */}
+        {/* Mobile menu button */}
         <button
           className="md:hidden p-2.5 text-muted"
           onClick={() => setOpen(!open)}
@@ -51,7 +51,7 @@ export function Nav() {
       </div>
 
       {open && (
-        <div className="md:hidden bg-canvas px-6 py-4 flex flex-col gap-1 shadow-sm">
+        <div className="md:hidden bg-canvas px-6 py-4 flex flex-col gap-1 shadow-sm border-b border-hairline">
           {links.map((l) => (
             <Link
               key={l.href}

@@ -134,6 +134,15 @@
     line-height: 1.2;
     letter-spacing: -0.019rem;
   }
+  .type-wordmark {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-style: normal;
+    font-variant-caps: all-small-caps;
+    font-variant-ligatures: discretionary-ligatures;
+    line-height: 0.95;
+    letter-spacing: 0.18em;
+  }
 
   .type-title-lg { font-size: 1.375rem; font-weight: 500; line-height: 1.3; }
   .type-title-md { font-size: 1.125rem; font-weight: 500; line-height: 1.4; }

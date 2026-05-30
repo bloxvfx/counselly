@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { SapientiaMark } from "@/components/brand/sapientia-mark";
+import { CounsellyMark } from "@/components/brand/counselly-mark";
 import {
   LayoutDashboard,
   ListChecks,
@@ -12,16 +12,8 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview", Icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/college-list", label: "College List", Icon: ListChecks },
-  { href: "/dashboard/timeline", label: "Timeline", Icon: CalendarDays },
-  { href: "/dashboard/essays", label: "Essays", Icon: FileText },
-  { href: "/dashboard/scholarships", label: "Scholarships", Icon: GraduationCap },
-  { href: "/dashboard/chat", label: "AI Counsellor", Icon: MessageCircle },
-  { href: "/dashboard/profile", label: "Profile", Icon: User },
-];
+import { getProfileContext } from "@/lib/profile-context";
+import type { ProfileSnapshot } from "@/types/profile-context";
 
 export default async function DashboardLayout({
   children,
@@ -37,12 +29,26 @@ export default async function DashboardLayout({
   if (!user) redirect("/auth");
 
   const { data: profile } = await supabase
-    .from("sapientia_profiles")
-    .select("onboarding_completed, full_name")
+    .from("counselly_profiles")
+    .select("onboarding_completed, full_name, target_countries, intended_major, board, academic_score, tests_taken, activities, help_needed")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!profile?.onboarding_completed) redirect("/onboarding");
+
+  const ctx = getProfileContext(profile as ProfileSnapshot | null);
+
+  const ALL_NAV_ITEMS = [
+    { href: "/dashboard", label: "Overview", Icon: LayoutDashboard },
+    { href: "/dashboard/college-list", label: "College List", Icon: ListChecks },
+    { href: "/dashboard/timeline", label: "Timeline", Icon: CalendarDays },
+    { href: "/dashboard/essays", label: "Essays", Icon: FileText, hidden: !ctx.needsEssays },
+    { href: "/dashboard/scholarships", label: "Scholarships", Icon: GraduationCap },
+    { href: "/dashboard/chat", label: "AI Counsellor", Icon: MessageCircle },
+    { href: "/dashboard/profile", label: "Profile", Icon: User },
+  ];
+
+  const navItems = ALL_NAV_ITEMS.filter(item => !item.hidden);
 
   const displayName =
     profile?.full_name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "You";
@@ -57,15 +63,15 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen bg-canvas">
       {/* Sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-hairline bg-surface-soft lg:flex">
-        <div className="flex h-16 items-center gap-2.5 border-b border-hairline px-5">
-          <SapientiaMark className="h-5" decorative />
-          <span className="font-display text-[1.1rem] font-[400] tracking-tight text-ink">
-            Sapientia
+        <div className="flex h-16 items-center gap-2 border-b border-hairline px-5">
+          <CounsellyMark className="h-6" decorative />
+          <span className="type-wordmark text-ink text-[1.3rem]">
+            Counselly
           </span>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 p-3 pt-4">
-          {NAV_ITEMS.map(({ href, label, Icon }) => (
+          {navItems.map(({ href, label, Icon }) => (
             <Link
               key={href}
               href={href}
@@ -105,10 +111,10 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-3 border-b border-hairline bg-canvas px-4 lg:hidden">
-        <SapientiaMark className="h-5" decorative />
-        <span className="font-display text-[1.1rem] font-[400] tracking-tight text-ink">
-          Sapientia
+      <div className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-2 border-b border-hairline bg-canvas px-4 lg:hidden">
+        <CounsellyMark className="h-6" decorative />
+        <span className="type-wordmark text-ink text-[1.3rem]">
+          Counselly
         </span>
       </div>
 

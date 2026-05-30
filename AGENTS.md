@@ -4,9 +4,9 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-## About Sapientia
+## About Counselly
 
-Sapientia is an AI-powered college counselling dashboard for Indian students who lack access to affordable, quality counselling. It acts as a fully personalised AI college counsellor — covering college list building, application timelines, essay guidance, extracurricular/profile advice, scholarship discovery, interview prep, and on-demand AI chat.
+Counselly is an AI-powered college counselling dashboard for Indian students who lack access to affordable, quality counselling. It acts as a fully personalised AI college counsellor — covering college list building, application timelines, essay guidance, extracurricular/profile advice, scholarship discovery, interview prep, and on-demand AI chat.
 
 ## Commands
 
@@ -58,3 +58,27 @@ Defined in `src/app/globals.css` using Tailwind v4's `@theme` block. Key convent
 **Spacing:** `py-section` = 96px band rhythm. Card internal padding `p-8` (32px).
 
 **Border radius:** `rounded-md` (8px) buttons/inputs · `rounded-lg` (12px) cards · `rounded-pill` badges.
+
+## Database
+
+**Supabase project:** `xiwaeetiolcxqoufsejw` — shared with **Lerno** (an existing AI study app).
+
+> ⚠️ **Critical:** This Supabase instance is shared. Lerno has ~35 tables. Counselly owns exactly one: `counselly_profiles`. Read `DB_RULES.md` before touching anything database-related.
+
+**Key files:**
+- `DB_RULES.md` — ownership boundaries, RLS rules, naming conventions, what NOT to do
+- `DB_STRUCTURE.md` — full schema reference for all tables (Counselly + Lerno overview)
+- `counselly_schema.sql` — SQL source for all Counselly-owned tables
+
+**The only Counselly table:** `counselly_profiles`
+- One row per user, `id = auth.users.id`
+- Filled during onboarding at `/onboarding`
+- Gates dashboard access via `onboarding_completed = true`
+- RLS enabled: users can only read/write their own row
+
+**Lerno integration:** Lerno users sign in with existing credentials. Counselly never creates auth users and never writes to Lerno tables. Only `auth.users.user_metadata` (name) is read to pre-fill onboarding.
+
+**Supabase clients:**
+- `src/lib/supabase/server.ts` — Server Components and Route Handlers
+- `src/lib/supabase/client.ts` — Client Components (`"use client"`)
+- `src/lib/supabase/admin.ts` — Service role (never use client-side)
