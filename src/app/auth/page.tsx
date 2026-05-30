@@ -43,10 +43,10 @@ export default async function AuthPage({
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-6 xl:px-10">
 
         {/* Nav */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-hairline">
-          <Link href="/" className="flex items-center gap-2 group">
-            <CounsellyMark className="h-6 transition-opacity group-hover:opacity-60" decorative />
-            <CounsellyText className="h-[11px] w-auto transition-opacity group-hover:opacity-60" />
+        <header className="flex h-24 shrink-0 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <CounsellyMark className="h-9 transition-opacity group-hover:opacity-60" decorative />
+            <CounsellyText className="h-[16px] w-auto transition-opacity group-hover:opacity-60" />
           </Link>
           <Link
             href="/"
