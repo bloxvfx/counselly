@@ -80,10 +80,10 @@ export function SiteFooter() {
             <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.5fr)_minmax(0,0.5fr)] lg:gap-16">
               {/* Brand */}
               <div className="max-w-md">
-                <div className="mb-6 flex flex-wrap items-center gap-2">
+                <Link href="/" className="mb-6 flex flex-wrap items-center gap-2 group hover:opacity-80 transition-opacity">
                   <CounsellyMark className="h-8 w-auto sm:h-10" decorative />
                   <CounsellyText className="h-[14px] sm:h-[18px] w-auto" />
-                </div>
+                </Link>
 
                 <p className="type-body-md text-body mb-6 max-w-sm leading-relaxed">
                   AI-powered college counselling for every Indian student — timelines, essays, lists, and answers that

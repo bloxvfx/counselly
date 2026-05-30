@@ -46,7 +46,7 @@ export default async function AuthPage({
         <header className="flex h-24 shrink-0 items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <CounsellyMark className="h-9 transition-opacity group-hover:opacity-60" decorative />
-            <CounsellyText className="h-[16px] w-auto transition-opacity group-hover:opacity-60" />
+            <CounsellyText className="h-[18px] w-auto transition-opacity group-hover:opacity-60" />
           </Link>
           <Link
             href="/"

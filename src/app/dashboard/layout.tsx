@@ -63,9 +63,11 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen bg-canvas">
       {/* Sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-hairline bg-surface-soft lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b border-hairline px-5">
-          <CounsellyMark className="h-6" decorative />
-          <CounsellyText className="h-[11px] w-auto" />
+        <div className="flex h-[80px] items-center border-b border-hairline px-6">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
+            <CounsellyMark className="h-[38px]" decorative />
+            <CounsellyText className="h-[19px] w-auto" />
+          </Link>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 p-3 pt-4">
@@ -109,13 +111,15 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-2 border-b border-hairline bg-canvas px-4 lg:hidden">
-        <CounsellyMark className="h-6" decorative />
-        <CounsellyText className="h-[11px] w-auto" />
+      <div className="fixed inset-x-0 top-0 z-20 flex h-[64px] items-center border-b border-hairline bg-canvas px-4 lg:hidden">
+        <Link href="/dashboard" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
+          <CounsellyMark className="h-[32px]" decorative />
+          <CounsellyText className="h-[16px] w-auto" />
+        </Link>
       </div>
 
       {/* Main */}
-      <main className="flex min-w-0 flex-1 flex-col pt-14 lg:pt-0">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col pt-[64px] lg:pt-0">{children}</main>
     </div>
   );
 }
