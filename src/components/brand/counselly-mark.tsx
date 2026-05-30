@@ -33,3 +33,33 @@ export function CounsellyMark({
     </span>
   );
 }
+
+const TEXT_WIDTH = 590;
+const TEXT_HEIGHT = 132;
+const TEXT_ASPECT_RATIO = `${TEXT_WIDTH} / ${TEXT_HEIGHT}`;
+
+type CounsellyTextProps = {
+  className?: string;
+  priority?: boolean;
+};
+
+export function CounsellyText({
+  className,
+  priority = false,
+}: CounsellyTextProps) {
+  return (
+    <span
+      className={cn("relative inline-block shrink-0", className)}
+      style={{ aspectRatio: TEXT_ASPECT_RATIO }}
+    >
+      <Image
+        src="/counselly-text.svg"
+        alt="Counselly"
+        fill
+        sizes="100vw"
+        className="object-contain object-left"
+        priority={priority}
+      />
+    </span>
+  );
+}

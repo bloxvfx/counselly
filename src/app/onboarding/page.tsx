@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { CounsellyMark } from "@/components/brand/counselly-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export const metadata = {
@@ -48,9 +48,7 @@ export default async function OnboardingPage() {
         <header className="flex h-14 items-center">
           <Link href="/" className="flex items-center gap-1.5 group">
             <CounsellyMark className="h-6 transition-opacity group-hover:opacity-75" decorative />
-            <span className="type-wordmark text-ink text-[1.45rem] transition-opacity group-hover:opacity-75">
-              Counselly
-            </span>
+            <CounsellyText className="h-[11px] w-auto transition-opacity group-hover:opacity-75" />
           </Link>
         </header>
 

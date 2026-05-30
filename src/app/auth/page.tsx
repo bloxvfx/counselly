@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { CounsellyMark } from "@/components/brand/counselly-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
@@ -46,9 +46,7 @@ export default async function AuthPage({
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-hairline">
           <Link href="/" className="flex items-center gap-2 group">
             <CounsellyMark className="h-6 transition-opacity group-hover:opacity-60" decorative />
-            <span className="type-wordmark text-ink text-[1.45rem]">
-              Counselly
-            </span>
+            <CounsellyText className="h-[11px] w-auto transition-opacity group-hover:opacity-60" />
           </Link>
           <Link
             href="/"

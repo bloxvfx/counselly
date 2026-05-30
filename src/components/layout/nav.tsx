@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CounsellyMark } from "@/components/brand/counselly-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -17,11 +17,9 @@ export function Nav() {
     <header className="sticky top-0 z-50 h-24 bg-canvas/92 backdrop-blur-md">
       <div className="mx-auto w-full max-w-6xl h-full px-6 lg:px-8 flex items-center justify-between">
 
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2.5">
           <CounsellyMark className="h-10 w-auto md:h-12" decorative priority />
-          <span className="type-wordmark text-ink text-[1.8rem] md:text-[1.95rem]">
-            Counselly
-          </span>
+          <CounsellyText className="h-[17px] md:h-[21px] w-auto" priority />
         </Link>
 
         {/* Desktop Links */}

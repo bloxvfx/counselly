@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { CounsellyMark } from "@/components/brand/counselly-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import {
   LayoutDashboard,
   ListChecks,
@@ -65,9 +65,7 @@ export default async function DashboardLayout({
       <aside className="hidden w-60 shrink-0 flex-col border-r border-hairline bg-surface-soft lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-hairline px-5">
           <CounsellyMark className="h-6" decorative />
-          <span className="type-wordmark text-ink text-[1.3rem]">
-            Counselly
-          </span>
+          <CounsellyText className="h-[11px] w-auto" />
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 p-3 pt-4">
@@ -113,9 +111,7 @@ export default async function DashboardLayout({
       {/* Mobile top bar */}
       <div className="fixed inset-x-0 top-0 z-20 flex h-14 items-center gap-2 border-b border-hairline bg-canvas px-4 lg:hidden">
         <CounsellyMark className="h-6" decorative />
-        <span className="type-wordmark text-ink text-[1.3rem]">
-          Counselly
-        </span>
+        <CounsellyText className="h-[11px] w-auto" />
       </div>
 
       {/* Main */}

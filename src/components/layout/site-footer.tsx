@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
-import { CounsellyMark } from "@/components/brand/counselly-mark";
+import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
 import { InPageAnchor } from "@/components/layout/in-page-anchor";
 
 function IconX({ className }: { className?: string }) {
@@ -82,9 +82,7 @@ export function SiteFooter() {
               <div className="max-w-md">
                 <div className="mb-6 flex flex-wrap items-center gap-2">
                   <CounsellyMark className="h-8 w-auto sm:h-10" decorative />
-                  <span className="type-wordmark text-ink text-[clamp(1.55rem,2.9vw,1.95rem)]">
-                    Counselly
-                  </span>
+                  <CounsellyText className="h-[14px] sm:h-[18px] w-auto" />
                 </div>
 
                 <p className="type-body-md text-body mb-6 max-w-sm leading-relaxed">
