@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in to Lerno</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f7fb;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb;padding:40px 0;">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.07);">
+<tr><td align="center" style="padding:32px 36px 20px;">
+  <a href="https://app.lerno.in" target="_blank" style="text-decoration:none;">
+    <img src="https://xiwaeetiolcxqoufsejw.supabase.co/storage/v1/object/public/Public/Lerno.png" alt="Lerno" width="120" style="display:block;border:0;" />
+  </a>
+</td></tr>
+<tr><td style="padding:0 36px;"><div style="height:1px;background:#f3f4f6;"></div></td></tr>
+<tr><td style="padding:28px 36px 0;">
+  <h1 style="margin:0 0 10px;font-size:22px;font-weight:800;color:#111827;">Your sign-in link</h1>
+  <p style="margin:0 0 26px;font-size:14px;color:#6b7280;line-height:1.65;">Click below to access your Lerno account. This link expires in 1 hour.</p>
+  <table cellpadding="0" cellspacing="0" style="margin-bottom:26px;"><tr>
+    <td>
+      <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:13px 26px;border-radius:12px;font-size:14px;font-weight:700;">Open Lerno &rarr;</a>
+    </td>
+  </tr></table>
+  <p style="margin:0 0 24px;font-size:12px;color:#9ca3af;line-height:1.6;">Button not working? Copy this link:<br />
+    <a href="{{ .ConfirmationURL }}" style="color:#2563eb;word-break:break-all;">{{ .ConfirmationURL }}</a>
+  </p>
+  <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">If you didn&rsquo;t request this, you can safely ignore this email.</p>
+</td></tr>
+<tr><td style="padding:22px 36px 32px;border-top:1px solid #f3f4f6;">
+  <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">Warm regards,<br /><strong>Team Lerno</strong></p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

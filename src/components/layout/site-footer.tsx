@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
-import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
+import {
+  CounsellyMark,
+  CounsellyText,
+  counsellyLogoLockupClass,
+} from "@/components/brand/counselly-mark";
 import { InPageAnchor } from "@/components/layout/in-page-anchor";
 
 function IconX({ className }: { className?: string }) {
@@ -76,12 +80,15 @@ export function SiteFooter() {
             className="pointer-events-none absolute -right-4 bottom-[-3.5rem] h-[min(52vw,18rem)] w-auto opacity-[0.09] sm:h-[min(42vw,22rem)]"
           />
 
-          <div className="relative z-10 mx-auto max-w-6xl px-6 pb-10 pt-14 sm:px-8 sm:pb-12 sm:pt-16">
-            <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.5fr)_minmax(0,0.5fr)] lg:gap-16">
+          <div className="relative z-10 mx-auto max-w-6xl px-4 pb-10 pt-12 sm:px-8 sm:pb-12 sm:pt-16">
+            <div className="grid gap-10 sm:gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.5fr)_minmax(0,0.5fr)] lg:gap-16">
               {/* Brand */}
               <div className="max-w-md">
-                <Link href="/" className="mb-6 flex flex-wrap items-center gap-2 group hover:opacity-80 transition-opacity">
-                  <CounsellyMark className="h-8 w-auto sm:h-10" decorative />
+                <Link
+                  href="/"
+                  className={`mb-6 flex flex-wrap items-center ${counsellyLogoLockupClass} group hover:opacity-80 transition-opacity`}
+                >
+                  <CounsellyMark className="h-7 w-auto sm:h-8" decorative />
                   <CounsellyText className="h-[14px] sm:h-[18px] w-auto" />
                 </Link>
 

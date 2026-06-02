@@ -35,7 +35,7 @@ const GRADE_OPTIONS = [
   { value: "applied", label: "Already Applied" },
 ];
 
-const COUNTRY_OPTIONS = [
+const PRIMARY_COUNTRY_OPTIONS = [
   { value: "USA", emoji: "🇺🇸" },
   { value: "UK", emoji: "🇬🇧" },
   { value: "Canada", emoji: "🇨🇦" },
@@ -46,6 +46,32 @@ const COUNTRY_OPTIONS = [
   { value: "India", emoji: "🇮🇳" },
   { value: "Other", emoji: "🌍" },
 ];
+
+const EXTENDED_COUNTRY_OPTIONS = [
+  { value: "Japan", emoji: "🇯🇵" },
+  { value: "Hong Kong", emoji: "🇭🇰" },
+  { value: "South Korea", emoji: "🇰🇷" },
+  { value: "France", emoji: "🇫🇷" },
+  { value: "Ireland", emoji: "🇮🇪" },
+  { value: "Italy", emoji: "🇮🇹" },
+  { value: "Spain", emoji: "🇪🇸" },
+  { value: "Sweden", emoji: "🇸🇪" },
+  { value: "Norway", emoji: "🇳🇴" },
+  { value: "Denmark", emoji: "🇩🇰" },
+  { value: "Belgium", emoji: "🇧🇪" },
+  { value: "Austria", emoji: "🇦🇹" },
+  { value: "Switzerland", emoji: "🇨🇭" },
+];
+
+const COUNTRY_OPTIONS = [
+  ...PRIMARY_COUNTRY_OPTIONS.filter((c) => c.value !== "Other"),
+  ...EXTENDED_COUNTRY_OPTIONS,
+  PRIMARY_COUNTRY_OPTIONS[PRIMARY_COUNTRY_OPTIONS.length - 1],
+];
+
+const PRIMARY_COUNTRY_VALUES = new Set(
+  PRIMARY_COUNTRY_OPTIONS.map((c) => c.value),
+);
 
 const MAJOR_OPTIONS = [
   "Engineering & CS",
@@ -147,7 +173,7 @@ const itemVariants = {
 
 function ProgressBar({ current }: { current: number }) {
   return (
-    <div className="mb-10 flex items-center gap-3">
+    <div className="mb-8 flex items-center gap-2.5 sm:mb-10 sm:gap-3">
       {Array.from({ length: TOTAL_STEPS }, (_, i) => (
         <div key={i} className="relative flex-1">
           <div className="h-[2px] w-full rounded-full bg-hairline overflow-hidden">
@@ -217,14 +243,16 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative h-9 rounded-pill border px-4 type-caption transition-all duration-200 cursor-pointer",
+        "relative h-9 rounded-pill border px-4 flex items-center justify-center type-caption transition-all duration-200 cursor-pointer",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         active
           ? "border-primary bg-primary/8 text-primary"
           : "border-hairline bg-canvas text-muted hover:border-primary/35 hover:text-body",
       )}
     >
-      {children}
+      <span className="flex items-center justify-center w-full h-full leading-none">
+        {children}
+      </span>
     </button>
   );
 }
@@ -304,9 +332,11 @@ function Step0({
               <SelectCard
                 active={data.grade === g.value}
                 onClick={() => setData((d) => ({ ...d, grade: g.value }))}
-                className="w-full h-11 flex items-center justify-center text-center type-caption"
+                className="w-full h-11 flex items-center justify-center text-center py-0 type-caption"
               >
-                {g.label}
+                <span className="flex items-center justify-center w-full h-full leading-none">
+                  {g.label}
+                </span>
               </SelectCard>
             </motion.div>
           ))}
@@ -333,6 +363,10 @@ function Step1({
       })),
     [setData],
   );
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const hasHiddenCountry = data.targetCountries.some((c) => !PRIMARY_COUNTRY_VALUES.has(c));
+  const showAll = showAllCountries || hasHiddenCountry;
+  const visibleCountries = showAll ? COUNTRY_OPTIONS : PRIMARY_COUNTRY_OPTIONS;
 
   // India track sub-question: only for ambiguous majors
   const showIndiaTrack =
@@ -349,8 +383,8 @@ function Step1({
 
       <motion.div variants={itemVariants} initial="hidden" animate="visible" custom={1}>
         <FieldLabel>Countries you&apos;re considering</FieldLabel>
-        <div className="grid grid-cols-3 gap-2">
-          {COUNTRY_OPTIONS.map((c, i) => (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {visibleCountries.map((c, i) => (
             <motion.div
               key={c.value}
               variants={itemVariants}
@@ -371,6 +405,15 @@ function Step1({
             </motion.div>
           ))}
         </div>
+        {PRIMARY_COUNTRY_OPTIONS.length < COUNTRY_OPTIONS.length && !hasHiddenCountry && (
+          <button
+            type="button"
+            onClick={() => setShowAllCountries((v) => !v)}
+            className="mt-2 type-caption text-primary hover:underline"
+          >
+            {showAllCountries ? "Fewer countries" : "More countries"}
+          </button>
+        )}
       </motion.div>
 
       <motion.div variants={itemVariants} initial="hidden" animate="visible" custom={3}>
@@ -387,9 +430,11 @@ function Step1({
               <SelectCard
                 active={data.intendedMajor === m}
                 onClick={() => setData((d) => ({ ...d, intendedMajor: m }))}
-                className="w-full h-10 flex items-center type-caption"
+                className="w-full h-10 flex items-center py-0 type-caption"
               >
-                {m}
+                <span className="flex items-center justify-start w-full h-full leading-none">
+                  {m}
+                </span>
               </SelectCard>
             </motion.div>
           ))}
@@ -473,9 +518,11 @@ function Step2({
               <SelectCard
                 active={data.board === b.value}
                 onClick={() => setData((d) => ({ ...d, board: b.value }))}
-                className="w-full h-12 flex items-center justify-start px-4 type-caption"
+                className="w-full h-12 flex items-center justify-start px-4 py-0 type-caption"
               >
-                {b.label}
+                <span className="flex items-center justify-start w-full h-full leading-none">
+                  {b.label}
+                </span>
               </SelectCard>
             </motion.div>
           ))}
@@ -514,7 +561,7 @@ function Step3({
       {/* Financial aid */}
       <motion.div variants={itemVariants} initial="hidden" animate="visible" custom={1}>
         <FieldLabel>Financial aid / scholarships</FieldLabel>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           {AID_OPTIONS.map((a, i) => (
             <motion.div
               key={a.value}
@@ -728,7 +775,10 @@ export function OnboardingFlow({ initialName = "" }: { initialName?: string }) {
 
       {/* Navigation */}
       <motion.div
-        className={cn("mt-10 flex items-center", step > 0 ? "justify-between" : "justify-end")}
+        className={cn(
+          "mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4",
+          step > 0 ? "sm:justify-between" : "sm:justify-end",
+        )}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease, delay: 0.1 }}
@@ -738,7 +788,7 @@ export function OnboardingFlow({ initialName = "" }: { initialName?: string }) {
             type="button"
             onClick={goBack}
             disabled={pending}
-            className="h-10 px-5 rounded-md border border-hairline bg-canvas text-body type-button hover:bg-surface-soft transition-all duration-200 disabled:opacity-40 cursor-pointer"
+            className="h-11 w-full rounded-md border border-hairline bg-canvas px-5 text-body type-button transition-all duration-200 hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-auto"
           >
             Back
           </button>
@@ -750,7 +800,7 @@ export function OnboardingFlow({ initialName = "" }: { initialName?: string }) {
             onClick={goNext}
             disabled={!canAdvance(step, data)}
             className={cn(
-              "h-10 px-6 rounded-md bg-primary text-on-primary type-button",
+              "h-11 w-full rounded-md bg-primary px-6 text-on-primary type-button sm:h-10 sm:w-auto",
               "transition-all duration-200 cursor-pointer",
               "hover:bg-primary-active",
               "disabled:opacity-40 disabled:cursor-not-allowed",
@@ -764,11 +814,10 @@ export function OnboardingFlow({ initialName = "" }: { initialName?: string }) {
             onClick={handleFinish}
             disabled={!canAdvance(step, data) || pending}
             className={cn(
-              "h-10 px-6 rounded-md bg-primary text-on-primary type-button",
+              "relative h-11 w-full overflow-hidden rounded-md bg-primary px-6 text-on-primary type-button sm:h-10 sm:w-auto",
               "transition-all duration-200 cursor-pointer",
               "hover:bg-primary-active",
               "disabled:opacity-40 disabled:cursor-not-allowed",
-              "relative overflow-hidden",
             )}
           >
             {pending ? (

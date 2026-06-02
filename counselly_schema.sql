@@ -33,6 +33,9 @@ create table if not exists counselly_profiles (
   college_type_preference  text[],
   activities               text[],         -- legacy category tags, superseded by counselly_activities table
   help_needed              text[],         -- e.g. ['Building my college list', 'Writing application essays']
+  college_list_context     jsonb default '{}'::jsonb, -- AI-guided college list discovery preferences & stage
+  -- Optional personal info (profile page — not collected in onboarding)
+  personal_details         jsonb,          -- preferred_name, pronouns, gender, dob, location, timezone, phone, bio, etc.
   -- Status
   onboarding_completed     boolean default false,
   created_at               timestamptz default now(),
@@ -177,27 +180,28 @@ create trigger counselly_activities_updated_at
   for each row execute procedure counselly_set_updated_at();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- counselly_honors: Awards and academic honors.
+-- counselly_honors: Competitions, awards, and academic honors.
 -- Relevant for: USA (T1), UK/Canada/Singapore/India_Holistic (T2).
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists counselly_honors (
-  id             uuid default gen_random_uuid() primary key,
-  user_id        uuid references auth.users(id) on delete cascade not null,
+  id                uuid default gen_random_uuid() primary key,
+  user_id           uuid references auth.users(id) on delete cascade not null,
 
-  title          text not null,
-  -- level: 'school' | 'district' | 'state' | 'national' | 'international'
-  level          text,
-  year           integer,
-  grade          text,
+  title             text not null,
+  field             text,           -- e.g. 'Mathematics' | 'Computing & Technology' | 'Science'
+  issuing_org       text,           -- e.g. 'AMC / MAA', 'CBSE', 'Google'
+  level             text,           -- 'school' | 'district' | 'state' | 'national' | 'international'
+  recognition_level text,           -- Common App: 'school' | 'state/regional' | 'national' | 'international'
+  year              text,           -- e.g. '2024'
+  grade             text,           -- '9' | '10' | '11' | '12'
+  status            text default 'participated', -- 'planned' | 'participated' | 'placed' | 'won'
+  award             text,           -- e.g. '1st Place', 'Gold Medal', 'Finalist', 'Certificate of Merit'
+  description       text,           -- what the student accomplished
 
-  -- Maps to Common App recognition level
-  -- 'school' | 'state/regional' | 'national' | 'international'
-  recognition_level text,
-
-  sort_order     integer default 0,
-  created_at     timestamptz default now(),
-  updated_at     timestamptz default now()
+  sort_order        integer default 0,
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now()
 );
 
 alter table counselly_honors enable row level security;
@@ -359,3 +363,76 @@ create policy "Users can delete own counselly college list"
 create trigger counselly_college_list_updated_at
   before update on counselly_college_list
   for each row execute procedure counselly_set_updated_at();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- counselly_colleges: Public college directory (~1000 colleges).
+-- Reference data — not user-specific. RLS allows public read (no auth required).
+-- Seeded via scripts/seed-colleges.mjs (College Scorecard + manual curation).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists counselly_colleges (
+  id                      uuid default gen_random_uuid() primary key,
+  name                    text not null,
+  slug                    text unique not null,
+  country                 text not null,
+  state_province          text,
+  city                    text,
+  college_type            text,
+  control                 text,
+  qs_rank                 integer,
+  qs_rank_year            integer,
+  us_news_rank            integer,
+  acceptance_rate         numeric(5,2),
+  test_optional           boolean default false,
+  avg_sat_math_25         integer,
+  avg_sat_math_75         integer,
+  avg_sat_read_25         integer,
+  avg_sat_read_75         integer,
+  avg_act_25              integer,
+  avg_act_75              integer,
+  avg_gpa                 numeric(4,2),
+  undergrad_enrollment    integer,
+  total_enrollment        integer,
+  annual_tuition_usd      integer,
+  annual_cost_usd         integer,
+  intl_financial_aid      boolean default false,
+  avg_intl_aid_usd        integer,
+  strong_programs         text[] default '{}',
+  tags                    text[] default '{}',
+  website_url             text,
+  application_portal      text,
+  early_deadline          date,
+  regular_deadline        date,
+  description             text,
+  notable_facts           text[] default '{}',
+  scorecard_id            text,
+  data_sources            text[] default '{}',
+  last_updated            date default current_date,
+  created_at              timestamptz default now(),
+  updated_at              timestamptz default now()
+);
+
+create index if not exists counselly_colleges_name_idx on counselly_colleges using gin (to_tsvector('english', name));
+create index if not exists counselly_colleges_country_idx on counselly_colleges (country);
+create index if not exists counselly_colleges_qs_rank_idx on counselly_colleges (qs_rank);
+create index if not exists counselly_colleges_acceptance_rate_idx on counselly_colleges (acceptance_rate);
+create index if not exists counselly_colleges_slug_idx on counselly_colleges (slug);
+create index if not exists counselly_colleges_tags_idx on counselly_colleges using gin (tags);
+create index if not exists counselly_colleges_programs_idx on counselly_colleges using gin (strong_programs);
+
+create trigger counselly_colleges_updated_at
+  before update on counselly_colleges
+  for each row execute procedure counselly_set_updated_at();
+
+alter table counselly_colleges enable row level security;
+
+create policy "Anyone can read counselly colleges"
+  on counselly_colleges for select
+  using (true);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migration (existing databases): see migrations/
+-- ─────────────────────────────────────────────────────────────────────────────
+-- alter table counselly_profiles add column if not exists personal_details jsonb;
+-- alter table counselly_profiles add column if not exists india_track text;
+-- alter table counselly_profiles add column if not exists college_list_context jsonb default '{}'::jsonb;

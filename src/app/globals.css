@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 /* ─────────────────────────────────────────────────────────────
    SAPIENTIA DESIGN SYSTEM
@@ -68,7 +69,13 @@
     -moz-osx-font-smoothing: grayscale;
     /* Lenis owns smooth scrolling when active (see `html.lenis`); fallback otherwise */
     scroll-behavior: smooth;
-    scroll-padding-top: 6rem;
+    scroll-padding-top: 4rem;
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      scroll-padding-top: 6rem;
+    }
   }
 
   /* Avoid double-smoothing: Lenis drives scroll physics while `.lenis` is on <html> */
@@ -78,6 +85,14 @@
 
   h1, h2, h3, h4, h5, h6 {
     color: var(--color-ink);
+  }
+
+  button, [role="button"], a[href], label[for], select {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
   }
 
   a {
@@ -318,6 +333,112 @@
   }
 }
 
+@keyframes message-send {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-message-send {
+  animation: message-send 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes guide-fade-in {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes guide-shimmer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.animate-guide-in {
+  animation: guide-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-guide-in-delayed {
+  animation: guide-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 80ms;
+  opacity: 0;
+}
+
+@keyframes rec-card-reveal {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-rec-card {
+  opacity: 0;
+  animation: rec-card-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-guide-shimmer {
+  animation: guide-shimmer 1.1s ease-in-out infinite;
+}
+
+@keyframes guide-mark-blur-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes guide-mark-blur-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.9);
+  }
+}
+
+.animate-guide-mark-in {
+  animation: guide-mark-blur-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-guide-mark-out {
+  animation: guide-mark-blur-out 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 @keyframes carousel-scroll {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -332,6 +453,95 @@
   animation-play-state: paused;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   PREMIUM MOTION & ANIMATION SYSTEM
+   Longer durations, ultra-smooth bezier curves, hardware-accelerated
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes premium-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.995);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes premium-tab-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.animate-premium-reveal {
+  animation: premium-fade-in-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-premium-tab-reveal {
+  animation: premium-tab-reveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-backdrop-fade {
+  animation: backdrop-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-scale {
+  animation: modal-scale-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger utilities for smooth cascaded entry */
+.stagger-1 { animation-delay: 40ms !important; }
+.stagger-2 { animation-delay: 80ms !important; }
+.stagger-3 { animation-delay: 120ms !important; }
+.stagger-4 { animation-delay: 160ms !important; }
+.stagger-5 { animation-delay: 200ms !important; }
+.stagger-6 { animation-delay: 240ms !important; }
+.stagger-7 { animation-delay: 280ms !important; }
+.stagger-8 { animation-delay: 320ms !important; }
+
+/* Premium hover transitions */
+.premium-interactive {
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-interactive:hover {
+  transform: translateY(-2px) scale(1.003);
+  box-shadow: 0 12px 28px -8px rgba(20, 20, 19, 0.05);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -342,3 +552,4 @@
     transition-duration: 0.001ms !important;
   }
 }
+

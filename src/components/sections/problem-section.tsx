@@ -77,7 +77,7 @@ function CountUp({
 
 export function ProblemSection() {
   return (
-    <section className="py-section px-6 border-b border-hairline">
+    <section className="border-b border-hairline px-4 py-14 sm:px-6 sm:py-16 lg:px-6 lg:py-section">
       <div className="mx-auto max-w-6xl">
 
         {/* Header */}
@@ -86,7 +86,7 @@ export function ProblemSection() {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.65, ease }}
-          className="mb-14"
+          className="mb-10 sm:mb-12 lg:mb-14"
         >
           <p className="type-caption-upper text-muted mb-4">The problem</p>
           <h2 className="type-display-md text-ink max-w-xl">
@@ -106,7 +106,7 @@ export function ProblemSection() {
               whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, ease, delay: i * 0.13 }}
-              className="group relative overflow-hidden rounded-xl border border-hairline bg-canvas p-8 hover:border-primary/40 hover:bg-surface-soft transition-all duration-300"
+              className="group relative overflow-hidden rounded-xl border border-hairline bg-canvas p-6 transition-all duration-300 hover:border-primary/40 hover:bg-surface-soft sm:p-8"
             >
               {/* Animated top accent line */}
               <div

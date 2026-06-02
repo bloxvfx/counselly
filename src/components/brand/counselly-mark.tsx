@@ -1,8 +1,11 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const MARK_WIDTH = 290;
-const MARK_HEIGHT = 305;
+/** Gap between mark and wordmark in horizontal lockups */
+export const counsellyLogoLockupClass = "gap-1.5";
+
+const MARK_WIDTH = 277;
+const MARK_HEIGHT = 232;
 const MARK_ASPECT_RATIO = `${MARK_WIDTH} / ${MARK_HEIGHT}`;
 
 type CounsellyMarkProps = {

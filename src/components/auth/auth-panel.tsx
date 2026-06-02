@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthCallbackUrl, isEmailSendRateLimit } from "@/lib/auth-urls";
 import { getUnmetPasswordRules, validateEmail } from "@/lib/auth-validation";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
@@ -20,25 +21,6 @@ interface AuthPanelProps {
 }
 
 const ease = [0.21, 0.47, 0.32, 0.98] as const;
-const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
-
-function getSiteOrigin() {
-  return configuredSiteUrl || window.location.origin;
-}
-
-function getAuthCallbackUrl(next?: string) {
-  const url = new URL("/auth/callback", getSiteOrigin());
-  if (next) url.searchParams.set("next", next);
-  return url.toString();
-}
-
-function isEmailSendRateLimit(error: { code?: string; message?: string }) {
-  return (
-    error.code === "over_email_send_rate_limit" ||
-    error.code === "over_request_rate_limit" ||
-    /rate limit/i.test(error.message ?? "")
-  );
-}
 
 export function AuthPanel({
   initialMode, initialMessage, initialError,
@@ -126,38 +108,52 @@ export function AuthPanel({
       }
       if (mode === "signup") {
         const trimmedEmail = email.trim();
-        const signInUrl = getAuthCallbackUrl(nextPath);
-        const { error: existingAccountError } = await sb.auth.signInWithOtp({
-          email: trimmedEmail,
-          options: {
-            emailRedirectTo: signInUrl,
-            shouldCreateUser: false,
-          },
-        });
 
-        if (!existingAccountError) {
-          setPassword("");
-          setConfirmPassword("");
-          setNotice({
-            kind: "ok",
-            text: "You already have an account. We sent a sign-in link to your email.",
-          });
+        // Existing Lerno/Counselly users: sign in with password — no magic-link email.
+        const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
+        if (!signInError && signInData.session) {
+          router.push(nextPath);
+          router.refresh();
           return;
         }
 
-        if (isEmailSendRateLimit(existingAccountError)) {
+        const { data, error } = await sb.auth.signUp({
+          email: trimmedEmail,
+          password,
+          options: { emailRedirectTo: getAuthCallbackUrl("/onboarding") },
+        });
+
+        if (error) {
+          if (isEmailSendRateLimit(error)) {
+            return setNotice({
+              kind: "error",
+              text: "Email sending is temporarily rate limited. Please wait a minute and try again.",
+            });
+          }
+          if (error.code === "user_already_exists") {
+            return setNotice({
+              kind: "error",
+              text: "An account with this email already exists. Use Log in with your password, or Forgot password.",
+            });
+          }
+          return setNotice({ kind: "error", text: error.message });
+        }
+
+        if (data.user?.identities?.length === 0) {
           return setNotice({
             kind: "error",
-            text: "Email sending is temporarily rate limited. Please wait a minute and try again.",
+            text: "An account with this email already exists. Use Log in with your password, or Forgot password.",
           });
         }
 
-        const { data, error } = await sb.auth.signUp({
-          email: trimmedEmail, password,
-          options: { emailRedirectTo: getAuthCallbackUrl("/onboarding") },
-        });
-        if (error) return setNotice({ kind: "error", text: error.message });
-        if (data.session) { router.push("/onboarding"); router.refresh(); return; }
+        if (data.session) {
+          router.push("/onboarding");
+          router.refresh();
+          return;
+        }
         setNotice({ kind: "ok", text: "Check your email to confirm your account." });
       }
       if (mode === "forgot") {
@@ -385,7 +381,7 @@ function Panel({ children }: { children: React.ReactNode }) {
     <motion.div
       initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
       animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.46, ease: [0.21, 0.47, 0.32, 0.98] } }}
-      className="w-full rounded-xl border border-hairline bg-canvas px-8 py-8 shadow-[0_4px_24px_rgba(20,20,19,0.07)]"
+      className="w-full rounded-xl border border-hairline bg-canvas px-5 py-6 shadow-[0_4px_24px_rgba(20,20,19,0.07)] sm:px-7 sm:py-7 lg:px-8 lg:py-8"
     >
       {children}
     </motion.div>

@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
-const PROTECTED = ["/dashboard", "/onboarding"];
+const PROTECTED = ["/dashboard", "/profile", "/onboarding"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
