@@ -110,17 +110,22 @@ function RecommendationCard({
   onAdd,
   adding,
   added,
+  index,
 }: {
   college: CollegeRecommendation;
   onAdd: () => void;
   adding: boolean;
   added: boolean;
+  index: number;
 }) {
   const tierStyle = TIER_STYLES[college.tier] ?? TIER_STYLES.target;
   const keyFacts = college.key_facts ? displayKeyFacts(college.key_facts) : "";
 
   return (
-    <div className="rounded-lg border border-hairline bg-canvas p-4 flex flex-col gap-2.5">
+    <div
+      className="rounded-lg border border-hairline bg-canvas p-4 flex flex-col gap-2.5 animate-rec-card"
+      style={{ animationDelay: `${index * 130 + 60}ms` }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="type-caption text-ink">{college.college_name}</p>
@@ -281,26 +286,31 @@ function MCQFooter({
 
 function buildProfileContextItems(
   profile: ProfileForDiscovery,
-  context: CollegeListContext,
+  _context: CollegeListContext,
 ): ContextSummaryItem[] {
   const items: ContextSummaryItem[] = [];
-  const major = context.study_field?.trim() || profile.intended_major?.trim();
-  if (major && major !== "Undecided") {
-    items.push({ id: "profile-major", label: "Major", value: major });
-  }
-  const countries = context.location_preferences?.length
-    ? context.location_preferences.join(", ")
-    : profile.target_countries?.filter(Boolean).join(", ");
+  const countries = profile.target_countries?.filter(Boolean).join(", ");
   if (countries) {
     items.push({ id: "profile-countries", label: "Countries", value: countries });
   }
   return items;
 }
 
+function DiscoveryStepIntro() {
+  return (
+    <div className="px-1 py-1 animate-guide-in">
+      <p className="type-display-sm text-ink">Build your college list</p>
+      <p className="type-body-sm text-muted mt-1">
+        Pick what fits you, then tap Continue.
+      </p>
+    </div>
+  );
+}
+
 function ContextSummary({ items }: { items: ContextSummaryItem[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="rounded-lg border border-hairline bg-surface-soft/50 px-3 py-2.5 animate-guide-in">
+    <div className="rounded-lg bg-surface-soft px-3 py-2.5 animate-guide-in">
       <p className="type-caption text-muted mb-2" style={{ fontSize: "0.68rem" }}>
         So far
       </p>
@@ -464,8 +474,8 @@ function GuideAssistantMessage({
       )}
 
       {msg.recommendations && msg.recommendations.length > 0 && (
-        <div className="mt-2 grid gap-2.5 animate-guide-in">
-          {msg.recommendations.map((college) => {
+        <div className="mt-2 grid gap-2.5">
+          {msg.recommendations.map((college, i) => {
             const key = `${college.college_name}-${college.country}`;
             return (
               <RecommendationCard
@@ -474,6 +484,7 @@ function GuideAssistantMessage({
                 onAdd={() => onAddCollege(college)}
                 adding={addingIds.has(key)}
                 added={addedNames.has(key)}
+                index={i}
               />
             );
           })}
@@ -503,10 +514,12 @@ export function CollegeListGuide({
   const [discoveryContext, setDiscoveryContext] = useState<CollegeListContext>(() =>
     mergeProfileIntoDiscoveryContext(listContext, profileForDiscovery),
   );
-  const totalDiscoverySteps = useRef(
+  const discoveryAdvancingRef = useRef(false);
+  const discoveryTotalSteps = useRef(
     countInitialDiscoverySteps(
       profileForDiscovery,
       mergeProfileIntoDiscoveryContext(listContext, profileForDiscovery),
+      [],
     ),
   );
   const [messages, setMessages] = useState<GuideMessage[]>(() =>
@@ -857,25 +870,30 @@ export function CollegeListGuide({
 
   const advanceDiscovery = useCallback(
     async (baseMessages: GuideMessage[], patchedContext: CollegeListContext) => {
-      const serialized = serializeGuideMessages(baseMessages);
-      const nextQ = getNextDiscoveryQuestion(
-        profileForDiscovery,
-        patchedContext,
-        serialized,
-      );
+      discoveryAdvancingRef.current = true;
+      try {
+        const serialized = serializeGuideMessages(baseMessages);
+        const nextQ = getNextDiscoveryQuestion(
+          profileForDiscovery,
+          patchedContext,
+          serialized,
+        );
 
-      if (nextQ) {
-        const withQuestion = [...baseMessages, createQuestionMessage(nextQ)];
-        setMessages(withQuestion);
+        if (nextQ) {
+          const withQuestion = [...baseMessages, createQuestionMessage(nextQ)];
+          setMessages(withQuestion);
+          setDiscoveryContext(patchedContext);
+          await persistMessages(withQuestion, patchedContext, "preferences");
+          return;
+        }
+
+        setMessages(baseMessages);
         setDiscoveryContext(patchedContext);
-        await persistMessages(withQuestion, patchedContext, "preferences");
-        return;
+        await persistMessages(baseMessages, patchedContext, "preferences");
+        await fetchRecommendations(baseMessages, patchedContext);
+      } finally {
+        discoveryAdvancingRef.current = false;
       }
-
-      setMessages(baseMessages);
-      setDiscoveryContext(patchedContext);
-      await persistMessages(baseMessages, patchedContext, "preferences");
-      await fetchRecommendations(baseMessages, patchedContext);
     },
     [profileForDiscovery, persistMessages, fetchRecommendations],
   );
@@ -946,9 +964,33 @@ export function CollegeListGuide({
 
   const send = useCallback(
     async (text: string) => {
-      await submitUserReply(text);
+      const trimmed = text.trim();
+      if (!trimmed || streaming) return;
+      // If discovery is complete and recommendations haven't been shown yet,
+      // any user message should go through recommendations mode — not regular chat.
+      // This prevents a retry loop where the error message says "send a message to try again"
+      // but regular chat can't generate recommendations.
+      const visible = messages.filter((m) => !m.hidden);
+      if (shouldFetchRecommendations(profileForDiscovery, discoveryContext, visible)) {
+        const userMsg: GuideMessage = {
+          id: crypto.randomUUID(),
+          role: "user",
+          content: trimmed,
+          statusSteps: [],
+          actions: [],
+        };
+        setLastSentUserId(userMsg.id);
+        const nextMessages = [...visible, userMsg];
+        setMessages(nextMessages);
+        await persistMessages(nextMessages);
+        // Reset the ref so this call actually fires
+        recommendationsFetchRef.current = false;
+        await fetchRecommendations(nextMessages, discoveryContext);
+      } else {
+        await submitUserReply(trimmed);
+      }
     },
-    [submitUserReply],
+    [submitUserReply, messages, streaming, profileForDiscovery, discoveryContext, fetchRecommendations, persistMessages],
   );
 
   const handleResetSession = useCallback(async () => {
@@ -969,7 +1011,7 @@ export function CollegeListGuide({
     recommendationsFetchRef.current = false;
 
     const ctx = mergeProfileIntoDiscoveryContext({}, profileForDiscovery);
-    totalDiscoverySteps.current = countInitialDiscoverySteps(profileForDiscovery, ctx);
+    discoveryTotalSteps.current = countInitialDiscoverySteps(profileForDiscovery, ctx, []);
     setDiscoveryContext(ctx);
     setStage("intro");
     setInput("");
@@ -994,6 +1036,7 @@ export function CollegeListGuide({
     if (autoStart && !autoStartedRef.current && messages.length === 0) {
       autoStartedRef.current = true;
       const ctx = mergeProfileIntoDiscoveryContext(listContext, profileForDiscovery);
+      discoveryTotalSteps.current = countInitialDiscoverySteps(profileForDiscovery, ctx, []);
       const first = getNextDiscoveryQuestion(profileForDiscovery, ctx, []);
       if (!first) return;
       setDiscoveryContext(ctx);
@@ -1022,7 +1065,7 @@ export function CollegeListGuide({
   }, [needsResumeOnMount, profileForDiscovery, listContext, initialMessages, persistMessages]);
 
   useEffect(() => {
-    if (streaming || recommendationsFetchRef.current) return;
+    if (streaming || recommendationsFetchRef.current || discoveryAdvancingRef.current) return;
     const visible = messages.filter((m) => !m.hidden);
     if (!shouldFetchRecommendations(profileForDiscovery, discoveryContext, visible)) return;
 
@@ -1079,7 +1122,7 @@ export function CollegeListGuide({
 
   const progress = discoveryQuestionProgress(
     visibleMessages,
-    totalDiscoverySteps.current,
+    discoveryTotalSteps.current,
     Boolean(findPendingQuestionMessage(visibleMessages)),
   );
 
@@ -1097,19 +1140,11 @@ export function CollegeListGuide({
               style={{ width: `${progress.percent}%` }}
             />
           </div>
-          <span className="type-caption text-muted shrink-0 tabular-nums">
-            {progress.step}/{progress.total}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3 mt-1.5">
-          <p className="type-caption text-muted" style={{ fontSize: "0.65rem" }}>
-            {progress.step >= progress.total
-              ? streaming
-                ? "Fetching college matches…"
-                : "All set — fetching college matches…"
-              : `Question ${progress.step} of ${progress.total}`}
-          </p>
-
+          {progress.total > 1 ? (
+            <span className="type-caption text-muted shrink-0 tabular-nums">
+              {progress.step}/{progress.total}
+            </span>
+          ) : null}
           {resetConfirm ? (
             <div className="flex items-center gap-2 animate-guide-in shrink-0">
               <span className="type-caption text-body hidden sm:inline">Start over?</span>
@@ -1138,14 +1173,17 @@ export function CollegeListGuide({
               className="inline-flex items-center gap-1.5 rounded-md border border-hairline px-2.5 py-1 type-caption text-muted hover:text-ink hover:border-primary/30 transition-colors disabled:opacity-50 shrink-0"
             >
               <RotateCcw className="h-3 w-3" strokeWidth={2} />
-              Start over
+              <span className="hidden sm:inline">Start over</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-1 flex flex-col gap-3 min-h-0">
-        {contextItems.length > 0 && <ContextSummary items={contextItems} />}
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-1 flex flex-col gap-3 min-h-0 bg-canvas">
+        {activeQuestion && progress.step === 1 ? <DiscoveryStepIntro /> : null}
+        {contextItems.length > 0 && progress.step > 1 ? (
+          <ContextSummary items={contextItems} />
+        ) : null}
 
         {!activeQuestion ? (
           threadMessages.map((msg) => (

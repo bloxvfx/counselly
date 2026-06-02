@@ -450,38 +450,40 @@ export async function fetchRecommendationPool(params: {
 }): Promise<RecommendationPool> {
   const dbCountries = [...new Set(params.countries.map(mapCountryToDb).filter(Boolean))]
   const fallbackCountries = ['USA', 'UK', 'Canada', 'Germany', 'Singapore']
-  const countries = dbCountries.length > 0 ? dbCountries : fallbackCountries
   const programs = params.programs
 
   const byCountry: Record<string, RecommendationPoolBucket> = {}
   const allNames: string[] = []
 
-  for (const country of countries) {
+  async function fetchBucket(country: string): Promise<RecommendationPoolBucket> {
     const [reach, target, safety] = await Promise.all([
-      searchCollegesForAI({
-        countries: [country],
-        programs,
-        max_acceptance_rate: 20,
-        limit: 6,
-      }),
-      searchCollegesForAI({
-        countries: [country],
-        programs,
-        min_acceptance_rate: 20,
-        max_acceptance_rate: 50,
-        limit: 6,
-      }),
-      searchCollegesForAI({
-        countries: [country],
-        programs,
-        min_acceptance_rate: 50,
-        limit: 3,
-      }),
+      searchCollegesForAI({ countries: [country], programs, max_acceptance_rate: 20, limit: 6 }),
+      searchCollegesForAI({ countries: [country], programs, min_acceptance_rate: 20, max_acceptance_rate: 50, limit: 6 }),
+      searchCollegesForAI({ countries: [country], programs, min_acceptance_rate: 50, limit: 3 }),
     ])
+    return { reach, target, safety }
+  }
 
-    byCountry[country] = { reach, target, safety }
-    for (const c of [...reach, ...target, ...safety]) {
+  // Try target countries first; skip any that yield 0 colleges in the DB
+  for (const country of dbCountries) {
+    const bucket = await fetchBucket(country)
+    if (bucket.reach.length + bucket.target.length + bucket.safety.length === 0) continue
+    byCountry[country] = bucket
+    for (const c of [...bucket.reach, ...bucket.target, ...bucket.safety]) {
       if (!allNames.includes(c.name)) allNames.push(c.name)
+    }
+  }
+
+  // If we couldn't find colleges for ANY target country, fall back to well-covered countries
+  if (Object.keys(byCountry).length === 0) {
+    for (const country of fallbackCountries) {
+      if (dbCountries.includes(country)) continue // already tried, had 0
+      const bucket = await fetchBucket(country)
+      if (bucket.reach.length + bucket.target.length + bucket.safety.length === 0) continue
+      byCountry[country] = bucket
+      for (const c of [...bucket.reach, ...bucket.target, ...bucket.safety]) {
+        if (!allNames.includes(c.name)) allNames.push(c.name)
+      }
     }
   }
 

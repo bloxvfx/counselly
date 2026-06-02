@@ -7,6 +7,7 @@ import {
   buildRecommendationRequirementsText,
   resolveTargetCountries,
   validateRecommendationBatch,
+  countriesMatch,
   type CollegeListContext,
   type CollegeRecommendation,
   type ProfileForDiscovery,
@@ -118,7 +119,7 @@ async function buildCollegeListSystemPrompt(userId: string, supabase: any): Prom
     "- Set allow_multiple: true for priorities, location preferences, and 'choose all that apply' questions.",
     "- Use INR and lakh/crore for any budget or cost figures — never USD. Audience is Indian students.",
     "- Skip any topic already in college_list_context or visible in conversation history.",
-    "- Ask at most 3 preference questions total, then move to recommendations.",
+    "- Ask at most 7 preference questions total, then move to recommendations. The question flow is: study focus → career direction → budget → placement importance → learning environment → priorities → post-grad plan.",
     "- NEVER ask urban/suburban/rural/campus setting/environment questions — treat onboarding college_type_preference as sufficient.",
     "- NEVER ask campus size unless the student brings it up.",
     "- If the student answered 'No preference', 'Not sure', or similar, treat that topic as closed — do not re-ask in different wording.",
@@ -448,6 +449,7 @@ async function callGemini(
   endpoint: string,
   systemPrompt: string,
   contents: GeminiContent[],
+  toolConfig?: { function_calling_config: { mode: string; allowed_function_names?: string[] } },
 ) {
   const normalized = normalizeGeminiContents(contents);
   if (normalized.length === 0) {
@@ -463,7 +465,7 @@ async function callGemini(
     body: JSON.stringify({
       system_instruction: { parts: [{ text: systemPrompt }] },
       tools: TOOLS,
-      tool_config: { function_calling_config: { mode: "AUTO" } },
+      tool_config: toolConfig ?? { function_calling_config: { mode: "AUTO" } },
       contents: normalized,
       generation_config: { temperature: 0.6, max_output_tokens: 4096 },
     }),
@@ -530,7 +532,12 @@ export async function POST(req: Request) {
     board: profileRow?.board,
   };
   const targetCountries = resolveTargetCountries(profileForDiscovery, listContext);
-  const targetCountriesLabel =
+
+  // effectiveTargetCountries = target countries that actually have colleges in the DB.
+  // Derived from the recommendation pool so unsupported countries (Ireland, New Zealand, etc.)
+  // are silently dropped before validation and country clamping.
+  let effectiveTargetCountries = targetCountries;
+  let targetCountriesLabel =
     targetCountries.length > 0 ? targetCountries.join(", ") : "USA, UK, Canada, Germany, Singapore";
 
   let recommendationPoolPrompt = "";
@@ -544,6 +551,13 @@ export async function POST(req: Request) {
       programs: programsFromStudyField(studyField),
     });
     recommendationPoolPrompt = formatRecommendationPoolForPrompt(pool);
+
+    // Use only countries the pool actually found colleges for
+    const coveredCountries = Object.keys(pool.byCountry);
+    if (coveredCountries.length > 0) {
+      effectiveTargetCountries = coveredCountries;
+      targetCountriesLabel = coveredCountries.join(", ");
+    }
   }
 
   const { readable: stream, writable } = new TransformStream<Uint8Array, Uint8Array>();
@@ -651,11 +665,16 @@ export async function POST(req: Request) {
         }
 
         if (textParts.length > 0) {
-          textEmittedThisTurn = true;
-          const fullText = textParts.join("");
-          const words = fullText.split(/(\s+)/);
-          for (const word of words) {
-            if (word) await push({ type: "text", delta: word });
+          // In recommendations mode, skip streaming AI text when there are also
+          // tool calls — prevents the same intro text repeating on every retry round.
+          // The suggest_colleges handler adds a clean hardcoded intro when ready.
+          if (!fetchRecommendations || !hasToolCall) {
+            textEmittedThisTurn = true;
+            const fullText = textParts.join("");
+            const words = fullText.split(/(\s+)/);
+            for (const word of words) {
+              if (word) await push({ type: "text", delta: word });
+            }
           }
         }
 
@@ -791,12 +810,22 @@ export async function POST(req: Request) {
               const isLateRound = rounds >= MAX_ROUNDS - 2;
               const hasEnoughEnriched = enriched.length >= 7;
 
+              // In recommendations mode, prefer effective target-country colleges; filter out strays
+              const targetOnly =
+                fetchRecommendations && effectiveTargetCountries.length > 0
+                  ? enriched.filter((c) =>
+                      effectiveTargetCountries.some((tc) => countriesMatch(tc, c.country)),
+                    )
+                  : enriched;
+              // Use target-filtered list if it has enough colleges, else fall back to all enriched
+              const toShow = targetOnly.length >= 5 ? targetOnly : enriched;
+
               if (missing.length > 0 && !isLateRound && !hasEnoughEnriched) {
                 result = `These colleges are NOT in counselly_colleges — replace with exact names from search_college_database or the shortlist: ${missing.join(", ")}. Then resubmit the full 10–14 list.`;
-              } else if (enriched.length === 0) {
+              } else if (toShow.length === 0) {
                 result = "None of the suggested colleges were found in counselly_colleges. Use exact names from search_college_database or the provided shortlist.";
               } else if (fetchRecommendations) {
-                const validation = validateRecommendationBatch(enriched, targetCountries);
+                const validation = validateRecommendationBatch(toShow, effectiveTargetCountries);
                 if (!validation.valid && !isLateRound) {
                   result = validation.feedback;
                 } else {
@@ -807,10 +836,10 @@ export async function POST(req: Request) {
                         "Based on your profile and verified Counselly data, here are colleges I'd recommend — grouped by fit across your target countries:\n\n",
                     });
                   }
-                  await push({ type: "recommendations", colleges: enriched });
+                  await push({ type: "recommendations", colleges: toShow });
                   await push({ type: "stage", stage: "recommendations" });
                   recommendationsEmitted = true;
-                  result = `Presented ${enriched.length} college recommendations from counselly_colleges.`;
+                  result = `Presented ${toShow.length} college recommendations from counselly_colleges.`;
                 }
               } else {
                 if (!textEmittedThisTurn) {
@@ -846,12 +875,25 @@ export async function POST(req: Request) {
             });
             try {
               const requestedCountries = args.countries as string[] | undefined;
-              // Auto-scope to student's target countries for general discovery (when no name or countries specified)
-              const effectiveCountries = requestedCountries?.length
-                ? requestedCountries
-                : !args.name_query && targetCountries.length > 0
-                  ? targetCountries
-                  : requestedCountries;
+              let effectiveCountries: string[] | undefined;
+              if (fetchRecommendations && effectiveTargetCountries.length > 0) {
+                // Recommendations mode: clamp to DB-verified target countries only
+                if (requestedCountries?.length) {
+                  const filtered = requestedCountries.filter((c) =>
+                    effectiveTargetCountries.some((tc) => countriesMatch(tc, c)),
+                  );
+                  effectiveCountries = filtered.length > 0 ? filtered : effectiveTargetCountries;
+                } else {
+                  effectiveCountries = args.name_query ? undefined : effectiveTargetCountries;
+                }
+              } else {
+                // Regular mode: auto-inject target countries when none specified and no name query
+                effectiveCountries = requestedCountries?.length
+                  ? requestedCountries
+                  : !args.name_query && effectiveTargetCountries.length > 0
+                    ? effectiveTargetCountries
+                    : requestedCountries;
+              }
               const colleges = await searchCollegesForAI({
                 name_query: args.name_query as string | undefined,
                 countries: effectiveCountries,
@@ -954,31 +996,27 @@ export async function POST(req: Request) {
             role: "user",
             parts: [
               {
-                text: `[FORCE_RECOMMENDATIONS] Stop searching. Pick 10–14 colleges ONLY from the counselly_colleges shortlist below. Call suggest_colleges with exact DB names: 1–2 per target country (${targetCountriesLabel}), reach/target mix, and 2–3 safety. Brief intro text first.${poolBlock}`,
+                text: `[FORCE_RECOMMENDATIONS] You MUST call suggest_colleges now. Pick 10–14 colleges ONLY from the shortlist below. Use exact DB names. Restrict to target countries (${targetCountriesLabel}) only. Reach/target mix, 2–3 safety.${poolBlock}`,
               },
             ],
           },
         ];
 
-        const geminiRes = await callGemini(apiKey, endpoint, systemPrompt, forceContents);
+        // Force the model to call suggest_colleges — no plain-text fallback allowed
+        const geminiRes = await callGemini(
+          apiKey,
+          endpoint,
+          systemPrompt,
+          forceContents,
+          { function_calling_config: { mode: "ANY", allowed_function_names: ["suggest_colleges"] } },
+        );
         const candidate = geminiRes?.candidates?.[0];
         if (candidate) {
           const parts = candidate?.content?.parts ?? [];
-          let textEmitted = false;
           const functionCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
-
           for (const part of parts) {
-            if (part.text) {
-              textEmitted = true;
-              const words = part.text.split(/(\s+)/);
-              for (const word of words) {
-                if (word) await push({ type: "text", delta: word });
-              }
-            } else if (part.functionCall) {
-              functionCalls.push({
-                name: part.functionCall.name,
-                args: part.functionCall.args ?? {},
-              });
+            if (part.functionCall) {
+              functionCalls.push({ name: part.functionCall.name, args: part.functionCall.args ?? {} });
             }
           }
 
@@ -986,17 +1024,19 @@ export async function POST(req: Request) {
             if (fc.name !== "suggest_colleges") continue;
             const colleges = ((fc.args.colleges as CollegeRecommendation[]) ?? []).filter(Boolean);
             if (colleges.length === 0) continue;
-            // Force fallback: accept whatever is in the DB, skip strict validation
             const { enriched } = await enrichRecommendationsFromDb(colleges);
             if (enriched.length === 0) continue;
-            if (!textEmitted) {
-              await push({
-                type: "text",
-                delta:
-                  "Based on verified Counselly data, here are colleges I'd recommend:\n\n",
-              });
-            }
-            await push({ type: "recommendations", colleges: enriched });
+            // Filter to DB-verified target countries; if not enough, fall back to all enriched
+            const filtered =
+              effectiveTargetCountries.length > 0
+                ? enriched.filter((c) => effectiveTargetCountries.some((tc) => countriesMatch(tc, c.country)))
+                : enriched;
+            const toShow = filtered.length >= 4 ? filtered : enriched;
+            await push({
+              type: "text",
+              delta: "Based on verified Counselly data, here are colleges I'd recommend:\n\n",
+            });
+            await push({ type: "recommendations", colleges: toShow });
             await push({ type: "stage", stage: "recommendations" });
             recommendationsEmitted = true;
             break;
@@ -1007,7 +1047,7 @@ export async function POST(req: Request) {
           await push({
             type: "text",
             delta:
-              "I wasn't able to generate your college list this time. Please send a message like \"Show my recommendations\" to try again.",
+              "I wasn't able to generate your college list right now. Tap the input below and type anything — I'll try again immediately.",
           });
         }
       }

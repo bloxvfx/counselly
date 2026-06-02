@@ -408,13 +408,19 @@ function compressZeroResultSearches(blocks: MessageBlock[]): MessageBlock[] {
   };
 
   for (const block of blocks) {
+    // Only batch-group genuine college name lookups that returned nothing,
+    // not discovery searches (country+programs combos which contain " · " or ", ").
     const isFailedNameLookup =
       block.type === "search" &&
       block.search.source === "database" &&
       block.search.done &&
       block.search.totalResults === 0 &&
       block.search.query.length > 2 &&
-      !/^(USA|UK|Canada)/i.test(block.search.query);
+      !block.search.query.includes(" · ") &&
+      !block.search.query.includes(", ") &&
+      !/^(USA|UK|Canada|Singapore|Germany|Australia|Netherlands|France|Switzerland|India)/i.test(
+        block.search.query,
+      );
 
     if (isFailedNameLookup) {
       zeroBatch.push(block.search);

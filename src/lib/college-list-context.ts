@@ -370,14 +370,21 @@ export function mergeProfileIntoDiscoveryContext(
   return merged;
 }
 
+/** Guided MCQ steps are skipped only after the student answers in this session — not from stale context. */
+function discoveryTopicAnswered(
+  messages: Array<{ question?: CollegeListMcq }> | undefined,
+  keywords: string[],
+): boolean {
+  return messagesCoverTopic(messages, keywords);
+}
+
 function needsFocusStep(
   profile: ProfileForDiscovery,
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.study_field_decided || context.study_field?.trim()) return false;
   if (
-    messagesCoverTopic(messages, [
+    discoveryTopicAnswered(messages, [
       "focus",
       "within",
       "specializ",
@@ -394,77 +401,75 @@ function needsFocusStep(
 }
 
 function needsBudgetStep(
-  profile: ProfileForDiscovery,
-  context: CollegeListContext,
+  _profile: ProfileForDiscovery,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.scholarship_need || context.budget_constraint || context.annual_budget_inr) {
-    return false;
-  }
-  if (messagesCoverTopic(messages, ["budget", "financial", "scholarship", "aid"])) return false;
-  if (profile.financial_aid_importance?.trim()) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, ["budget", "financial", "scholarship", "aid"]);
 }
 
 function needsPrioritiesStep(
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.priorities?.length) return false;
-  if (messagesCoverTopic(messages, ["priorit", "matters most"])) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, ["priorit", "matters most"]);
 }
 
 function needsCareerGoalStep(
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.career_goal) return false;
-  if (messagesCoverTopic(messages, ["career direction", "career goal", "career path"])) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, ["career direction", "career goal", "career path"]);
 }
 
 function needsPlacementStep(
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.placement_importance) return false;
-  if (context.priorities?.some((p) => /internship|placement/i.test(p))) return false;
-  if (messagesCoverTopic(messages, ["internship access", "career placement", "placement and internship"])) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, [
+    "internship access",
+    "career placement",
+    "placement and internship",
+  ]);
 }
 
 function needsLearningStyleStep(
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.learning_style) return false;
-  if (messagesCoverTopic(messages, ["learning environment", "teaching style", "learning style"])) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, [
+    "learning environment",
+    "teaching style",
+    "learning style",
+  ]);
 }
 
 function needsPostgradPlanStep(
-  context: CollegeListContext,
+  _context: CollegeListContext,
   messages?: Array<{ question?: CollegeListMcq }>,
 ): boolean {
-  if (context.postgrad_plan) return false;
-  if (messagesCoverTopic(messages, ["after getting your degree", "after your degree", "settle", "stay abroad"])) return false;
-  return true;
+  return !discoveryTopicAnswered(messages, [
+    "after getting your degree",
+    "after your degree",
+    "settle",
+    "stay abroad",
+  ]);
 }
 
 export function countInitialDiscoverySteps(
   profile: ProfileForDiscovery,
   context: CollegeListContext,
+  messages?: Array<{ question?: CollegeListMcq }>,
 ): number {
   const merged = mergeProfileIntoDiscoveryContext(context, profile);
   let n = 0;
-  if (needsFocusStep(profile, merged, undefined)) n++;
-  if (needsCareerGoalStep(merged, undefined)) n++;
-  if (needsBudgetStep(profile, merged, undefined)) n++;
-  if (needsPlacementStep(merged, undefined)) n++;
-  if (needsLearningStyleStep(merged, undefined)) n++;
-  if (needsPrioritiesStep(merged, undefined)) n++;
-  if (needsPostgradPlanStep(merged, undefined)) n++;
+  if (needsFocusStep(profile, merged, messages)) n++;
+  if (needsCareerGoalStep(merged, messages)) n++;
+  if (needsBudgetStep(profile, merged, messages)) n++;
+  if (needsPlacementStep(merged, messages)) n++;
+  if (needsLearningStyleStep(merged, messages)) n++;
+  if (needsPrioritiesStep(merged, messages)) n++;
+  if (needsPostgradPlanStep(merged, messages)) n++;
   return Math.max(n, 1);
 }
 
@@ -533,6 +538,12 @@ export function buildRecommendationRequirementsText(
       ? `- **Geography (mandatory):** Include **at least 1–2 schools from EACH** target country: ${countries.join(", ")}. Never skip an entire country — if fit is weak, include one honest reach there and explain why in honest_assessment.`
       : `- **Geography:** Spread picks across **at least 4 countries** suited to Indian applicants (e.g. USA, UK, Canada, Germany, Singapore). Include **at least 2 schools per country** for your top 3 country fits.`;
 
+  const profileLines: string[] = [];
+  if (context.career_goal) profileLines.push(`- **Career goal:** ${context.career_goal} — weight this in fit_summary.`);
+  if (context.placement_importance) profileLines.push(`- **Placement importance:** ${context.placement_importance} — prefer colleges with strong recruiting if critical.`);
+  if (context.learning_style) profileLines.push(`- **Learning style:** ${context.learning_style} — favour colleges that match in honest_assessment.`);
+  if (context.postgrad_plan) profileLines.push(`- **Post-grad plan:** ${context.postgrad_plan} — factor in visa/PR pathways and work-visa friendliness.`);
+
   return [
     "## suggest_colleges requirements (MANDATORY)",
     "- All colleges MUST exist in **counselly_colleges** — use search_college_database or the provided shortlist; exact names only.",
@@ -545,6 +556,7 @@ export function buildRecommendationRequirementsText(
     "- Do not repeat colleges already on their saved list.",
     "- **Never invent stats** — acceptance rate, cost, and rankings must come from counselly_colleges.",
     "- web_search is fine for scholarships or recent news; verified college facts must still come from counselly_colleges.",
+    ...(profileLines.length > 0 ? ["", "## Student preferences to factor into fit_summary", ...profileLines] : []),
   ].join("\n");
 }
 
