@@ -563,8 +563,12 @@ export function buildRecommendationRequirementsText(
 export function validateRecommendationBatch(
   colleges: CollegeRecommendation[],
   targetCountries: string[],
+  options?: { relaxed?: boolean },
 ): { valid: boolean; feedback: string } {
-  if (colleges.length < 10) {
+  const minColleges = options?.relaxed ? 6 : 10;
+  const minSafety = options?.relaxed ? 1 : 2;
+
+  if (colleges.length < minColleges) {
     return {
       valid: false,
       feedback: `Too few colleges (${colleges.length}). Call suggest_colleges again with **10–14 schools** total, including 2–3 safety-tier picks and coverage of every target country.`,
@@ -572,11 +576,15 @@ export function validateRecommendationBatch(
   }
 
   const safetyCount = colleges.filter((c) => c.tier === "safety").length;
-  if (safetyCount < 2) {
+  if (safetyCount < minSafety) {
     return {
       valid: false,
-      feedback: `Need **2–3 safety-tier** schools (found ${safetyCount}). Add genuine safeties and resubmit the **full** list of 10–14 colleges in one suggest_colleges call.`,
+      feedback: `Need **${minSafety === 1 ? "at least 1" : "2–3"} safety-tier** schools (found ${safetyCount}). Add genuine safeties and resubmit the **full** list of 10–14 colleges in one suggest_colleges call.`,
     };
+  }
+
+  if (options?.relaxed) {
+    return { valid: true, feedback: "" };
   }
 
   if (targetCountries.length > 0) {

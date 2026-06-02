@@ -519,6 +519,89 @@ export function formatRecommendationPoolForPrompt(pool: RecommendationPool): str
   return lines.join('\n')
 }
 
+function summaryKeyFacts(c: CollegeAISummary): string {
+  const parts: string[] = []
+  if (c.acceptance_rate != null) parts.push(`Acceptance: ${c.acceptance_rate}%`)
+  if (c.annual_tuition_usd != null) {
+    const lakh = Math.round((c.annual_tuition_usd * 83) / 100000)
+    parts.push(`Cost: ~$${c.annual_tuition_usd.toLocaleString('en-US')}/yr (≈₹${lakh} lakh)`)
+  }
+  if (c.qs_rank != null) parts.push(`QS #${c.qs_rank}`)
+  parts.push(c.intl_financial_aid ? 'Intl aid: yes' : 'Intl aid: limited')
+  return parts.join('; ')
+}
+
+/** Deterministic shortlist when the model fails to call suggest_colleges. */
+export function buildRecommendationsFromPool(
+  pool: RecommendationPool,
+  options?: { studyField?: string },
+): DbBackedRecommendation[] {
+  const field = options?.studyField?.trim() || 'your chosen field'
+  const used = new Set<string>()
+  const out: DbBackedRecommendation[] = []
+
+  const add = (c: CollegeAISummary, tier: DbBackedRecommendation['tier']) => {
+    if (used.has(c.name) || out.length >= 14) return
+    used.add(c.name)
+    out.push({
+      college_name: c.name,
+      country: c.country,
+      tier,
+      fit_summary: `Aligned with your interest in ${field} based on your discovery answers and verified Counselly data.`,
+      honest_assessment:
+        tier === 'reach'
+          ? 'Competitive for your profile — strong academics and testing improve your odds.'
+          : tier === 'safety'
+            ? 'More achievable admission odds if your scores meet typical published ranges.'
+            : 'Solid target-tier fit — compare your profile to typical admitted students.',
+      key_facts: summaryKeyFacts(c),
+    })
+  }
+
+  const countries = Object.keys(pool.byCountry)
+  for (let pass = 0; pass < 4 && out.length < 14; pass++) {
+    for (const country of countries) {
+      const bucket = pool.byCountry[country]
+      if (!bucket) continue
+      if (pass === 0) {
+        if (bucket.reach[0]) add(bucket.reach[0], 'reach')
+        if (bucket.target[0]) add(bucket.target[0], 'target')
+        if (bucket.safety[0]) add(bucket.safety[0], 'safety')
+      } else if (pass === 1) {
+        if (bucket.reach[1]) add(bucket.reach[1], 'reach')
+        if (bucket.target[1]) add(bucket.target[1], 'target')
+        if (bucket.safety[1]) add(bucket.safety[1], 'safety')
+      } else {
+        const safetyNames = new Set(bucket.safety.map((s) => s.name))
+        const reachNames = new Set(bucket.reach.map((s) => s.name))
+        for (const c of [...bucket.target, ...bucket.reach, ...bucket.safety]) {
+          if (out.length >= 14) break
+          const tier: DbBackedRecommendation['tier'] = safetyNames.has(c.name)
+            ? 'safety'
+            : reachNames.has(c.name)
+              ? 'reach'
+              : 'target'
+          add(c, tier)
+        }
+      }
+    }
+  }
+
+  let safetyCount = out.filter((c) => c.tier === 'safety').length
+  if (safetyCount < 2) {
+    for (const country of countries) {
+      for (const c of pool.byCountry[country]?.safety ?? []) {
+        if (safetyCount >= 2 || out.length >= 14) break
+        if (used.has(c.name)) continue
+        add(c, 'safety')
+        safetyCount++
+      }
+    }
+  }
+
+  return out.slice(0, 14)
+}
+
 export type DbBackedRecommendation = {
   college_name: string
   country: string

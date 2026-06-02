@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { webSearch, formatSearchResults } from "@/lib/search";
-import { searchCollegesForAI, fetchRecommendationPool, formatRecommendationPoolForPrompt, programsFromStudyField, enrichRecommendationsFromDb } from "@/lib/colleges-db";
+import {
+  searchCollegesForAI,
+  fetchRecommendationPool,
+  formatRecommendationPoolForPrompt,
+  programsFromStudyField,
+  enrichRecommendationsFromDb,
+  buildRecommendationsFromPool,
+  type RecommendationPool,
+} from "@/lib/colleges-db";
 import {
   parseCollegeListContext,
   getNextDiscoveryQuestion,
@@ -47,6 +55,14 @@ const sseEncoder = new TextEncoder();
 
 function encodeEvent(event: SSEEvent): Uint8Array {
   return sseEncoder.encode(`data: ${JSON.stringify(event)}\n\n`);
+}
+
+function logCollegeList(event: string, data?: Record<string, unknown>) {
+  if (data) {
+    console.log(`[counselly/college-list] ${event}`, data);
+  } else {
+    console.log(`[counselly/college-list] ${event}`);
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -539,24 +555,52 @@ export async function POST(req: Request) {
   let effectiveTargetCountries = targetCountries;
   let targetCountriesLabel =
     targetCountries.length > 0 ? targetCountries.join(", ") : "USA, UK, Canada, Germany, Singapore";
+  // When true, the effective countries came entirely from the DB fallback (not user-specified).
+  // In that case skip mandatory per-country coverage validation — the user has no preference.
+  let usedFallbackCountries = false;
 
   let recommendationPoolPrompt = "";
+  let recommendationPool: RecommendationPool | null = null;
+  const studyFieldForPool =
+    listContext.study_field?.trim() ||
+    profileRow?.intended_major?.trim() ||
+    undefined;
+
   if (fetchRecommendations) {
-    const studyField =
-      listContext.study_field?.trim() ||
-      profileRow?.intended_major?.trim() ||
-      undefined;
+    logCollegeList("recommendations:start", {
+      userId: user.id,
+      targetCountries,
+      studyField: studyFieldForPool,
+    });
+
     const pool = await fetchRecommendationPool({
       countries: targetCountries,
-      programs: programsFromStudyField(studyField),
+      programs: programsFromStudyField(studyFieldForPool),
     });
+    recommendationPool = pool;
     recommendationPoolPrompt = formatRecommendationPoolForPrompt(pool);
+
+    logCollegeList("recommendations:pool", {
+      poolCountries: Object.keys(pool.byCountry),
+      poolNames: pool.allNames.length,
+      usedFallbackCountries: Object.keys(pool.byCountry).length > 0 && !targetCountries.some((tc) =>
+        Object.keys(pool.byCountry).some((cc) => cc.toLowerCase() === tc.toLowerCase()),
+      ),
+    });
 
     // Use only countries the pool actually found colleges for
     const coveredCountries = Object.keys(pool.byCountry);
     if (coveredCountries.length > 0) {
+      // If the user's original target countries yielded nothing in the DB (e.g. "Other"),
+      // we fell back to default countries — don't mandate all of them in validation.
+      const originalHadDbCountries = targetCountries.some((tc) =>
+        coveredCountries.some((cc) => cc.toLowerCase() === tc.toLowerCase()),
+      );
+      usedFallbackCountries = !originalHadDbCountries;
       effectiveTargetCountries = coveredCountries;
       targetCountriesLabel = coveredCountries.join(", ");
+    } else {
+      logCollegeList("recommendations:pool-empty", { targetCountries });
     }
   }
 
@@ -620,12 +664,73 @@ export async function POST(req: Request) {
   }
 
   (async () => {
+    let recommendationsEmitted = false;
+    let textEmittedThisTurn = false;
+
+    const emitRecommendations = async (
+        colleges: CollegeRecommendation[],
+        source: string,
+      ): Promise<boolean> => {
+        if (colleges.length === 0) {
+          logCollegeList("recommendations:emit-empty", { source });
+          return false;
+        }
+        if (!textEmittedThisTurn) {
+          await push({
+            type: "text",
+            delta:
+              "Based on your profile and verified Counselly data, here are colleges I'd recommend — grouped by fit across your target countries:\n\n",
+          });
+        }
+        await push({ type: "recommendations", colleges });
+        await push({ type: "stage", stage: "recommendations" });
+        recommendationsEmitted = true;
+        logCollegeList("recommendations:emitted", {
+          source,
+          count: colleges.length,
+          tiers: {
+            reach: colleges.filter((c) => c.tier === "reach").length,
+            target: colleges.filter((c) => c.tier === "target").length,
+            safety: colleges.filter((c) => c.tier === "safety").length,
+          },
+        });
+        return true;
+      };
+
+      const tryPoolFallback = async (reason: string): Promise<boolean> => {
+        if (!recommendationPool || recommendationPool.allNames.length === 0) {
+          logCollegeList("recommendations:fallback-skipped", {
+            reason,
+            hasPool: Boolean(recommendationPool),
+            poolNames: recommendationPool?.allNames.length ?? 0,
+          });
+          return false;
+        }
+        logCollegeList("recommendations:fallback-attempt", { reason });
+        const drafted = buildRecommendationsFromPool(recommendationPool, {
+          studyField: studyFieldForPool,
+        });
+        const { enriched, missing } = await enrichRecommendationsFromDb(drafted);
+        logCollegeList("recommendations:fallback-enriched", {
+          drafted: drafted.length,
+          enriched: enriched.length,
+          missing,
+        });
+        if (enriched.length < 4) return false;
+        const filtered =
+          effectiveTargetCountries.length > 0 && !usedFallbackCountries
+            ? enriched.filter((c) =>
+                effectiveTargetCountries.some((tc) => countriesMatch(tc, c.country)),
+              )
+            : enriched;
+        const toShow = filtered.length >= 4 ? filtered : enriched;
+        return emitRecommendations(toShow, `pool-fallback:${reason}`);
+      };
+
     try {
       const MAX_ROUNDS = fetchRecommendations ? 14 : 10;
       let rounds = 0;
       let questionEmitted = false;
-      let recommendationsEmitted = false;
-      let textEmittedThisTurn = false;
       let searchCounter = 0;
 
       while (rounds < MAX_ROUNDS) {
@@ -810,9 +915,10 @@ export async function POST(req: Request) {
               const isLateRound = rounds >= MAX_ROUNDS - 2;
               const hasEnoughEnriched = enriched.length >= 7;
 
-              // In recommendations mode, prefer effective target-country colleges; filter out strays
+              // In recommendations mode, filter to target countries only when user actually specified them.
+              // When fallback countries were used (user had no preference / picked "Other"), accept any country.
               const targetOnly =
-                fetchRecommendations && effectiveTargetCountries.length > 0
+                fetchRecommendations && effectiveTargetCountries.length > 0 && !usedFallbackCountries
                   ? enriched.filter((c) =>
                       effectiveTargetCountries.some((tc) => countriesMatch(tc, c.country)),
                     )
@@ -825,21 +931,28 @@ export async function POST(req: Request) {
               } else if (toShow.length === 0) {
                 result = "None of the suggested colleges were found in counselly_colleges. Use exact names from search_college_database or the provided shortlist.";
               } else if (fetchRecommendations) {
-                const validation = validateRecommendationBatch(toShow, effectiveTargetCountries);
+                // Skip per-country coverage check when countries came from fallback defaults
+                // (user had no preference / picked "Other") — only enforce count and safety tiers.
+                const validationCountries = usedFallbackCountries ? [] : effectiveTargetCountries;
+                const validation = validateRecommendationBatch(toShow, validationCountries, {
+                  relaxed: isLateRound || rounds >= 8,
+                });
+                logCollegeList("recommendations:suggest_colleges", {
+                  round: rounds,
+                  incoming: colleges.length,
+                  enriched: enriched.length,
+                  toShow: toShow.length,
+                  missing: missing.length,
+                  valid: validation.valid,
+                  isLateRound,
+                  feedback: validation.valid ? undefined : validation.feedback,
+                });
                 if (!validation.valid && !isLateRound) {
                   result = validation.feedback;
-                } else {
-                  if (!textEmittedThisTurn) {
-                    await push({
-                      type: "text",
-                      delta:
-                        "Based on your profile and verified Counselly data, here are colleges I'd recommend — grouped by fit across your target countries:\n\n",
-                    });
-                  }
-                  await push({ type: "recommendations", colleges: toShow });
-                  await push({ type: "stage", stage: "recommendations" });
-                  recommendationsEmitted = true;
+                } else if (await emitRecommendations(toShow, `suggest-colleges:round-${rounds}`)) {
                   result = `Presented ${toShow.length} college recommendations from counselly_colleges.`;
+                } else {
+                  result = "Could not present recommendations — list was empty after filtering.";
                 }
               } else {
                 if (!textEmittedThisTurn) {
@@ -988,6 +1101,7 @@ export async function POST(req: Request) {
       }
 
       if (fetchRecommendations && !recommendationsEmitted) {
+        logCollegeList("recommendations:force-attempt", { rounds: MAX_ROUNDS });
         const poolBlock = recommendationPoolPrompt
           ? `\n\n${recommendationPoolPrompt}`
           : "";
@@ -1026,29 +1140,38 @@ export async function POST(req: Request) {
             if (colleges.length === 0) continue;
             const { enriched } = await enrichRecommendationsFromDb(colleges);
             if (enriched.length === 0) continue;
-            // Filter to DB-verified target countries; if not enough, fall back to all enriched
+            // Filter to user-specified target countries only; skip filter when countries came from fallback
             const filtered =
-              effectiveTargetCountries.length > 0
+              effectiveTargetCountries.length > 0 && !usedFallbackCountries
                 ? enriched.filter((c) => effectiveTargetCountries.some((tc) => countriesMatch(tc, c.country)))
                 : enriched;
             const toShow = filtered.length >= 4 ? filtered : enriched;
-            await push({
-              type: "text",
-              delta: "Based on verified Counselly data, here are colleges I'd recommend:\n\n",
+            logCollegeList("recommendations:force-suggest", {
+              incoming: colleges.length,
+              enriched: enriched.length,
+              toShow: toShow.length,
             });
-            await push({ type: "recommendations", colleges: toShow });
-            await push({ type: "stage", stage: "recommendations" });
-            recommendationsEmitted = true;
-            break;
+            if (await emitRecommendations(toShow, "force-suggest_colleges")) {
+              break;
+            }
           }
         }
 
         if (!recommendationsEmitted) {
-          await push({
-            type: "text",
-            delta:
-              "I wasn't able to generate your college list right now. Tap the input below and type anything — I'll try again immediately.",
-          });
+          const fallbackOk = await tryPoolFallback("after-force-gemini");
+          if (!fallbackOk) {
+            logCollegeList("recommendations:failed", {
+              rounds: MAX_ROUNDS,
+              poolNames: recommendationPool?.allNames.length ?? 0,
+              effectiveTargetCountries,
+              usedFallbackCountries,
+            });
+            await push({
+              type: "text",
+              delta:
+                "I wasn't able to generate your college list right now. Tap the input below and type anything — I'll try again immediately.",
+            });
+          }
         }
       }
 
@@ -1071,7 +1194,18 @@ export async function POST(req: Request) {
 
       await close();
     } catch (err) {
+      logCollegeList("error", {
+        message: err instanceof Error ? err.message : String(err),
+        fetchRecommendations,
+      });
       try {
+        if (fetchRecommendations && !recommendationsEmitted && recommendationPool) {
+          const recovered = await tryPoolFallback("catch-error");
+          if (recovered) {
+            await close();
+            return;
+          }
+        }
         await push({
           type: "text",
           delta: "\n\nSomething went wrong. Please try again.",

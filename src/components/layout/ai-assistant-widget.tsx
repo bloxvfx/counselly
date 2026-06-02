@@ -79,6 +79,19 @@ type ActiveQuiz = {
   answers: string[];
 };
 
+// ── Nudge messages ────────────────────────────────────────────────────────────
+
+const NUDGE_MESSAGES = [
+  "Ask me anything!",
+  "Let me review your profile",
+  "Need help with your essays?",
+  "How's your college list looking?",
+  "Find scholarships for you?",
+  "Let's check your timeline",
+  "I can strengthen your profile",
+  "Want interview prep tips?",
+];
+
 // ── Quick prompts ─────────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
@@ -507,6 +520,8 @@ export function CounsellyAIAssistant() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mascotCenter, setMascotCenter] = useState({ x: 0, y: 0 });
   const [activeQuiz, setActiveQuiz] = useState<ActiveQuiz | null>(null);
+  const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [dimensions, setDimensions] = useState({ width: 380, height: 560 });
   const [isMobile, setIsMobile] = useState(false);
@@ -632,6 +647,34 @@ export function CounsellyAIAssistant() {
   useEffect(() => {
     if (isOpen && !activeQuiz) setTimeout(() => textareaRef.current?.focus(), 150);
   }, [isOpen, activeQuiz]);
+
+  // Periodic nudge bubbles
+  useEffect(() => {
+    if (isOpen) return;
+
+    let lastIdx = -1;
+
+    function scheduleNext() {
+      // Random interval: 45–90 seconds
+      const delay = 45_000 + Math.random() * 45_000;
+      nudgeTimerRef.current = setTimeout(() => {
+        let idx: number;
+        do { idx = Math.floor(Math.random() * NUDGE_MESSAGES.length); } while (idx === lastIdx);
+        lastIdx = idx;
+        setNudgeMessage(NUDGE_MESSAGES[idx]);
+        // Auto-dismiss after 4.5 seconds
+        nudgeTimerRef.current = setTimeout(() => {
+          setNudgeMessage(null);
+          scheduleNext();
+        }, 4_500);
+      }, delay);
+    }
+
+    scheduleNext();
+    return () => {
+      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+    };
+  }, [isOpen]);
 
   // Click outside to close
   useEffect(() => {
@@ -927,8 +970,8 @@ export function CounsellyAIAssistant() {
             <motion.button
               ref={buttonRef}
               data-widget-trigger
-              onClick={() => setIsOpen((prev) => !prev)}
-              onMouseEnter={() => setIsHovered(true)}
+              onClick={() => { setNudgeMessage(null); setIsOpen((prev) => !prev); }}
+              onMouseEnter={() => { setIsHovered(true); setNudgeMessage(null); }}
               onMouseLeave={() => setIsHovered(false)}
               aria-label="Toggle Counselly AI"
               aria-expanded={isOpen}
@@ -969,7 +1012,7 @@ export function CounsellyAIAssistant() {
           )}
         </AnimatePresence>
 
-        {/* Tooltip capsule */}
+        {/* Hover tooltip capsule */}
         <AnimatePresence>
           {isHovered && !isOpen && (
             <motion.div
@@ -983,6 +1026,40 @@ export function CounsellyAIAssistant() {
               <kbd className="bg-surface-soft border border-hairline/60 px-1.5 py-0.5 rounded text-[10px] text-muted font-sans font-medium">
                 ⌘J
               </kbd>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Nudge bubble */}
+        <AnimatePresence>
+          {nudgeMessage && !isOpen && !isHovered && (
+            <motion.div
+              key={nudgeMessage}
+              initial={{ opacity: 0, scale: 0.9, x: 18, filter: "blur(10px)" }}
+              animate={{ opacity: 1, scale: 1, x: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.94, x: 12, filter: "blur(8px)" }}
+              transition={{
+                opacity: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                scale:   { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                x:       { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                filter:  { duration: 0.6,  ease: [0.22, 1, 0.36, 1] },
+              }}
+              className="pointer-events-none hidden sm:flex items-center select-none"
+            >
+              {/* Speech bubble */}
+              <div className="relative flex items-center bg-canvas border border-hairline rounded-2xl rounded-br-sm px-4 py-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.08)] whitespace-nowrap">
+                <span className="text-[12.5px] font-sans font-medium text-ink leading-none">{nudgeMessage}</span>
+                {/* Tail pointing right — colour matches bg-canvas #faf9f5 */}
+                <span
+                  className="absolute -right-[7px] bottom-[10px] w-0 h-0"
+                  style={{
+                    borderTop: "6px solid transparent",
+                    borderBottom: "6px solid transparent",
+                    borderLeft: "8px solid #faf9f5",
+                    filter: "drop-shadow(1px 0 0 #e6dfd8)",
+                  }}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
