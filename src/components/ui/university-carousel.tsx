@@ -39,7 +39,7 @@ const universities = [
 
 function UniversityBadge({ name, slug, ext }: { name: string; slug: string; ext: string }) {
   return (
-    <div className="group flex flex-col items-center gap-3 px-7 shrink-0 cursor-default select-none">
+    <div className="group flex shrink-0 cursor-default select-none flex-col items-center gap-2 px-4 sm:gap-3 sm:px-7">
       {/* Fixed-height container, width is natural — handles wide logos (UCL, Ashoka) and square ones (Harvard) equally */}
       <div className="h-16 flex items-center justify-center">
         <img
@@ -73,16 +73,16 @@ export function UniversityCarousel() {
   const doubled = [...universities, ...universities];
 
   return (
-    <div className="py-12 overflow-hidden">
-      <p className="text-center type-caption-upper text-muted mb-10">Students aiming for</p>
+    <div className="overflow-hidden py-10 sm:py-12">
+      <p className="type-caption-upper text-muted mb-8 px-4 text-center sm:mb-10 sm:px-6">Students aiming for</p>
 
       <div className="relative">
         <div
-          className="pointer-events-none absolute left-0 top-0 bottom-0 w-32 z-10"
+          className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-12 sm:w-20 lg:w-32"
           style={{ background: "linear-gradient(to right, var(--color-canvas), transparent)" }}
         />
         <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-32 z-10"
+          className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-12 sm:w-20 lg:w-32"
           style={{ background: "linear-gradient(to left, var(--color-canvas), transparent)" }}
         />
 

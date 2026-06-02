@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
+import { getOnboardingStatus } from "@/lib/supabase/cached";
+import {
+  CounsellyMark,
+  CounsellyText,
+  counsellyLogoLockupClass,
+} from "@/components/brand/counselly-mark";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export const metadata = {
@@ -10,22 +14,9 @@ export const metadata = {
 };
 
 export default async function OnboardingPage() {
-  const supabase = await createClient();
-  if (!supabase) redirect("/auth");
+  const { user, onboardingCompleted } = await getOnboardingStatus();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth");
-
-  // Check counselly_profiles — the canonical Counselly onboarding table
-  const { data: profile } = await supabase
-    .from("counselly_profiles")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profile?.onboarding_completed) redirect("/dashboard");
+  if (onboardingCompleted) redirect("/dashboard");
 
   // Pre-populate name from Lerno auth metadata
   const initialName: string =
@@ -43,22 +34,22 @@ export default async function OnboardingPage() {
         }}
       />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-6">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6">
         {/* Header */}
-        <header className="flex h-14 items-center">
-          <Link href="/" className="flex items-center gap-1.5 group">
-            <CounsellyMark className="h-6 transition-opacity group-hover:opacity-75" decorative />
-            <CounsellyText className="h-[11px] w-auto transition-opacity group-hover:opacity-75" />
+        <header className="flex h-14 shrink-0 items-center sm:h-16">
+          <Link href="/" className={`flex items-center ${counsellyLogoLockupClass} group`}>
+            <CounsellyMark className="h-6 transition-opacity group-hover:opacity-75 sm:h-7" decorative />
+            <CounsellyText className="h-[13px] w-auto transition-opacity group-hover:opacity-75 sm:h-[15px]" />
           </Link>
         </header>
 
         {/* Centered onboarding form */}
-        <div className="flex flex-1 items-center justify-center py-12">
+        <div className="flex flex-1 items-start justify-center py-6 sm:items-center sm:py-12">
           <OnboardingFlow initialName={initialName} />
         </div>
 
         {/* Footer note */}
-        <footer className="py-6 text-center">
+        <footer className="shrink-0 py-4 text-center sm:py-6">
           <p className="type-caption text-muted-soft">
             Your data is private and never shared. You can update your profile anytime.
           </p>

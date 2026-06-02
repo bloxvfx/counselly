@@ -23,19 +23,16 @@ export default function PricingPage() {
       <Nav />
 
       {/* ── Full-viewport content ──────────────────────────── */}
-      <main
-        className="flex flex-1 items-center px-6"
-        style={{ minHeight: "calc(100svh - 6rem)" }}
-      >
+      <main className="flex min-h-[calc(100svh-4rem)] flex-1 items-start px-4 py-10 sm:items-center sm:px-6 sm:py-12 lg:min-h-[calc(100svh-6rem)] lg:items-center lg:px-6 lg:py-0">
         <div className="mx-auto w-full max-w-6xl">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-16">
 
             {/* ── Left: pitch ─────────────────────────────── */}
             <div>
 
               {/* Badge */}
               <div
-                className="hero-reveal mb-8 inline-flex items-center gap-2.5 rounded-pill border border-primary/25 px-4 py-2 shadow-sm"
+                className="hero-reveal mb-6 inline-flex max-w-full flex-wrap items-center gap-2.5 rounded-pill border border-primary/25 px-3.5 py-2 shadow-sm sm:mb-8 sm:px-4"
                 style={{
                   ...d("60ms"),
                   background: "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 7%, var(--color-canvas)) 0%, var(--color-canvas) 100%)",
@@ -102,7 +99,7 @@ export default function PricingPage() {
               <div className="hero-reveal mt-8 flex flex-col gap-3 sm:flex-row sm:items-center" style={d("400ms")}>
                 <Link
                   href="/auth"
-                  className="group subtle-sheen inline-flex h-14 items-center justify-center gap-2.5 overflow-hidden rounded-pill bg-primary px-9 text-base font-medium text-on-primary shadow-[0_10px_32px_color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-all duration-200 hover:bg-primary-active hover:-translate-y-0.5 hover:shadow-[0_14px_40px_color-mix(in_srgb,var(--color-primary)_38%,transparent)]"
+                  className="group subtle-sheen inline-flex h-14 w-full items-center justify-center gap-2.5 overflow-hidden rounded-pill bg-primary px-9 text-base font-medium text-on-primary shadow-[0_10px_32px_color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-all duration-200 hover:bg-primary-active hover:-translate-y-0.5 hover:shadow-[0_14px_40px_color-mix(in_srgb,var(--color-primary)_38%,transparent)] sm:w-auto"
                 >
                   Get free access
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
@@ -130,7 +127,7 @@ export default function PricingPage() {
                   aria-hidden
                 />
 
-                <div className="relative z-10 p-8">
+                <div className="relative z-10 p-5 sm:p-8">
 
                   {/* Header */}
                   <div className="mb-6 flex items-start justify-between gap-4">
@@ -192,8 +189,8 @@ export default function PricingPage() {
                       border: "1px solid var(--color-hairline)",
                     }}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
                         <p className="type-caption text-muted mb-0.5">Traditional counsellor</p>
                         <p
                           className="text-muted"
@@ -209,8 +206,8 @@ export default function PricingPage() {
                           ₹2–5 lakh / yr
                         </p>
                       </div>
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-soft" strokeWidth={1.5} />
-                      <div className="text-right">
+                      <ArrowRight className="mx-auto h-3.5 w-3.5 shrink-0 rotate-90 text-muted-soft sm:mx-0 sm:rotate-0" strokeWidth={1.5} />
+                      <div className="text-left sm:text-right">
                         <p className="type-caption text-primary mb-0.5">Counselly today</p>
                         <p
                           className="text-primary"

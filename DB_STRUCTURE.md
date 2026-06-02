@@ -1,7 +1,7 @@
 # Database Structure — Counselly
 
 > **Project:** `xiwaeetiolcxqoufsejw` (Supabase)  
-> **Last synced:** 2026-05-28  
+> **Last synced:** 2026-06-01  
 > **Auth pool shared with:** Lerno (AI study app)
 
 ---
@@ -43,6 +43,7 @@ The core Counselly table. One row per user. Created during onboarding.
 | `college_type_preference` | `text[]` | — | e.g. `['Research Universities', 'Liberal Arts Colleges']` |
 | `activities` | `text[]` | — | e.g. `['Debate / MUN', 'Research / Science']` |
 | `help_needed` | `text[]` | — | e.g. `['Building my college list', 'Writing application essays']` |
+| `personal_details` | `jsonb` | — | Optional profile fields (pronouns, DOB, timezone, bio, etc.) — see `src/lib/personal-details.ts` |
 | `onboarding_completed` | `boolean` | `false` | Gate for dashboard access |
 | 📅 `created_at` | `timestamptz` | `now()` | Set once on insert |
 | 📅 `updated_at` | `timestamptz` | `now()` | Auto-updated via trigger |
@@ -53,6 +54,56 @@ The core Counselly table. One row per user. Created during onboarding.
 - `UPDATE` → `auth.uid() = id`
 
 **Trigger:** `counselly_profiles_updated_at` — calls `counselly_set_updated_at()` on every UPDATE.
+
+---
+
+### `counselly_colleges`
+
+Shared reference table — the public college directory. Not user-specific. Seeded via `scripts/seed-colleges.mjs`. RLS allows public read; only the service role (seed script) can write.
+
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| 🔑 `id` | `uuid` | `gen_random_uuid()` | |
+| `name` | `text` | — | Full college name |
+| `slug` | `text` | — | URL slug, unique (e.g. `massachusetts-institute-of-technology`) |
+| `country` | `text` | — | `'USA'` \| `'UK'` \| `'Canada'` \| `'Australia'` \| etc. |
+| `state_province` | `text` | — | e.g. `'MA'`, `'Ontario'` |
+| `city` | `text` | — | |
+| `college_type` | `text` | — | `'research_university'` \| `'liberal_arts'` \| `'technical'` \| `'arts'` |
+| `control` | `text` | — | `'public'` \| `'private'` |
+| `qs_rank` | `integer` | — | QS World University Ranking |
+| `qs_rank_year` | `integer` | — | Year of QS rank |
+| `us_news_rank` | `integer` | — | US News National ranking |
+| `acceptance_rate` | `numeric(5,2)` | — | Percentage, e.g. `5.40` |
+| `test_optional` | `boolean` | `false` | |
+| `avg_sat_math_25/75` | `integer` | — | 25th/75th percentile SAT Math |
+| `avg_sat_read_25/75` | `integer` | — | 25th/75th percentile SAT Reading |
+| `avg_act_25/75` | `integer` | — | 25th/75th percentile ACT |
+| `avg_gpa` | `numeric(4,2)` | — | |
+| `undergrad_enrollment` | `integer` | — | |
+| `annual_tuition_usd` | `integer` | — | |
+| `annual_cost_usd` | `integer` | — | Tuition + room + board |
+| `intl_financial_aid` | `boolean` | `false` | Awards aid to international students |
+| `avg_intl_aid_usd` | `integer` | — | Average intl aid package |
+| `strong_programs` | `text[]` | `'{}'` | e.g. `['CS', 'Economics']` |
+| `tags` | `text[]` | `'{}'` | e.g. `['ivy-league', 'need-blind-intl', 'stem-heavy']` |
+| `website_url` | `text` | — | |
+| `application_portal` | `text` | — | `'common_app'` \| `'ucas'` \| `'direct'` \| etc. |
+| `early_deadline` | `date` | — | |
+| `regular_deadline` | `date` | — | |
+| `description` | `text` | — | 2–3 sentence summary |
+| `notable_facts` | `text[]` | `'{}'` | Quick bullets for AI context |
+| `scorecard_id` | `text` | — | US College Scorecard unit ID |
+| 📅 `created_at` | `timestamptz` | `now()` | |
+| 📅 `updated_at` | `timestamptz` | `now()` | Auto-updated via trigger |
+
+**RLS policies:**
+- `SELECT` → `USING (true)` — public, no auth required
+- No INSERT/UPDATE/DELETE policies — only service role can write
+
+**Indexes:** GIN on `name` (full-text), `tags`, `strong_programs`; B-tree on `country`, `qs_rank`, `acceptance_rate`, `slug`.
+
+**Seeding:** `node scripts/seed-colleges.mjs` — pulls ~600 US colleges from College Scorecard API + ~400 international colleges from `scripts/data/colleges-intl.json`.
 
 ---
 

@@ -2,23 +2,28 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
+import {
+  CounsellyMark,
+  CounsellyText,
+  counsellyLogoLockupClass,
+} from "@/components/brand/counselly-mark";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Features", href: "/#features" },
-  { label: "Pricing",  href: "/pricing" },
+  { label: "Features",  href: "/#features" },
+  { label: "Colleges",  href: "/colleges" },
+  { label: "Pricing",   href: "/pricing" },
 ];
 
 export function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 h-24 bg-canvas/92 backdrop-blur-md">
-      <div className="mx-auto w-full max-w-6xl h-full px-6 lg:px-8 flex items-center justify-between">
+    <header className="sticky top-0 z-50 h-16 bg-canvas/92 backdrop-blur-md lg:h-24">
+      <div className="mx-auto flex h-full w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
-        <Link href="/" className="flex items-center gap-2.5">
-          <CounsellyMark className="h-10 w-auto md:h-12" decorative priority />
+        <Link href="/" className={cn("flex items-center", counsellyLogoLockupClass)}>
+          <CounsellyMark className="h-8 w-auto md:h-10" decorative priority />
           <CounsellyText className="h-[17px] md:h-[21px] w-auto" priority />
         </Link>
 
@@ -37,29 +42,58 @@ export function Nav() {
           </nav>
         </div>
 
-        {/* Mobile menu button */}
+        {/* Mobile / tablet menu button */}
         <button
-          className="md:hidden p-2.5 text-muted"
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-muted md:hidden"
           onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
+          aria-expanded={open}
+          aria-label={open ? "Close menu" : "Open menu"}
         >
-          <span className={cn("block w-5 h-0.5 bg-ink transition-all mb-1.5", open && "rotate-45 translate-y-2")} />
-          <span className={cn("block w-5 h-0.5 bg-ink transition-all", open && "-rotate-45 -translate-y-0")} />
+          <span className="relative block h-4 w-5" aria-hidden>
+            <span
+              className={cn(
+                "absolute left-0 top-0 block h-0.5 w-5 bg-ink transition-all duration-200",
+                open && "top-[7px] rotate-45",
+              )}
+            />
+            <span
+              className={cn(
+                "absolute left-0 top-[7px] block h-0.5 w-5 bg-ink transition-all duration-200",
+                open && "opacity-0",
+              )}
+            />
+            <span
+              className={cn(
+                "absolute left-0 top-[14px] block h-0.5 w-5 bg-ink transition-all duration-200",
+                open && "top-[7px] -rotate-45",
+              )}
+            />
+          </span>
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden bg-canvas px-6 py-4 flex flex-col gap-1 shadow-sm border-b border-hairline">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="text-base text-body py-3 border-b border-hairline-soft last:border-0"
-            >
-              {l.label}
-            </Link>
-          ))}
+        <div className="border-b border-hairline bg-canvas px-4 py-4 shadow-sm sm:px-6 md:hidden">
+          <nav className="flex flex-col gap-1">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-2 py-3 text-base text-body transition-colors hover:bg-surface-soft"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <Link
+            href="/auth"
+            onClick={() => setOpen(false)}
+            className="subtle-sheen mt-3 flex h-12 w-full items-center justify-center rounded-md bg-primary text-base font-medium text-on-primary transition-colors hover:bg-primary-active"
+          >
+            Get started
+          </Link>
         </div>
       )}
     </header>

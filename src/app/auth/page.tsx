@@ -1,6 +1,10 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { CounsellyMark, CounsellyText } from "@/components/brand/counselly-mark";
+import {
+  CounsellyMark,
+  CounsellyText,
+  counsellyLogoLockupClass,
+} from "@/components/brand/counselly-mark";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseEnv } from "@/lib/supabase/env";
@@ -39,13 +43,13 @@ export default async function AuthPage({
     : { data: { user: null } };
 
   return (
-    <main className="h-screen overflow-hidden bg-canvas flex flex-col">
-      <div className="mx-auto flex h-full w-full max-w-7xl flex-col px-6 xl:px-10">
+    <main className="flex min-h-svh flex-col bg-canvas lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-6 lg:h-full xl:px-10">
 
         {/* Nav */}
-        <header className="flex h-24 shrink-0 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <CounsellyMark className="h-9 transition-opacity group-hover:opacity-60" decorative />
+        <header className="flex h-16 shrink-0 items-center justify-between lg:h-24">
+          <Link href="/" className={`flex items-center ${counsellyLogoLockupClass} group`}>
+            <CounsellyMark className="h-7 transition-opacity group-hover:opacity-60" decorative />
             <CounsellyText className="h-[18px] w-auto transition-opacity group-hover:opacity-60" />
           </Link>
           <Link
@@ -59,11 +63,37 @@ export default async function AuthPage({
           </Link>
         </header>
 
-        {/* Two-column body — vertically centred, fills remaining height */}
-        <div className="grid flex-1 min-h-0 items-center lg:grid-cols-[minmax(0,28rem)_24rem] lg:gap-20 xl:grid-cols-[minmax(0,32rem)_28rem] xl:gap-24 justify-center">
+        {/* Two-column body — vertically centred on desktop */}
+        <div className="grid flex-1 min-h-0 items-center justify-center gap-8 py-6 sm:gap-10 sm:py-8 lg:grid-cols-[minmax(0,28rem)_24rem] lg:gap-20 lg:py-0 xl:grid-cols-[minmax(0,32rem)_28rem] xl:gap-24">
 
-          {/* ── Left ── */}
-          <div className="hidden min-w-0 overflow-visible lg:flex lg:flex-col gap-8">
+          {/* ── Mobile / tablet pitch (desktop uses left column below) ── */}
+          <div className="min-w-0 space-y-5 lg:hidden">
+            <div className="hero-reveal flex items-center gap-2.5" style={d("60ms")}>
+              <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+              <span className="type-caption-upper text-muted">Built for Indian students</span>
+            </div>
+            <h1 className="hero-reveal type-display-md text-ink" style={d("120ms")}>
+              Get into the college{" "}
+              <span style={{ color: "var(--color-primary)" }}>you want.</span>
+            </h1>
+            <div className="hero-reveal flex flex-col rounded-xl border border-hairline bg-surface-soft/60" style={d("200ms")}>
+              {OUTCOMES.map((item, i) => (
+                <div
+                  key={item.label}
+                  className={`flex items-center justify-between gap-4 px-4 py-3 ${i < OUTCOMES.length - 1 ? "border-b border-hairline" : ""}`}
+                >
+                  <span className="type-caption text-ink">{item.label}</span>
+                  <span className="type-caption text-right text-muted">{item.detail}</span>
+                </div>
+              ))}
+            </div>
+            <p className="hero-reveal type-body-sm text-muted" style={d("280ms")}>
+              <span className="font-medium text-ink">Already on Lerno?</span> Same account.
+            </p>
+          </div>
+
+          {/* ── Left (desktop) ── */}
+          <div className="hidden min-w-0 overflow-visible lg:flex lg:flex-col lg:gap-8">
 
             {/* Eyebrow */}
             <div className="hero-reveal flex items-center gap-2.5" style={d("60ms")}>
@@ -99,7 +129,7 @@ export default async function AuthPage({
           </div>
 
           {/* ── Right: auth panel ── */}
-          <div className="hero-reveal-soft min-w-0 w-full" style={d("80ms")}>
+          <div className="hero-reveal-soft mx-auto w-full min-w-0 max-w-md lg:mx-0 lg:max-w-none" style={d("80ms")}>
             <AuthPanel
               initialMode={mode}
               initialMessage={readParam(params.message)}

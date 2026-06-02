@@ -86,7 +86,7 @@ function CollegeListVisual() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-soft transition-colors"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-surface-soft sm:flex-nowrap sm:px-5"
           >
             <span className="text-base shrink-0">{c.flag}</span>
             <div className="flex-1 min-w-0">
@@ -407,7 +407,7 @@ export function FeaturesSection() {
   const ActiveVisual = features[active].Visual;
 
   return (
-    <section id="features" className="py-section px-6">
+    <section id="features" className="px-4 py-14 sm:px-6 sm:py-16 lg:px-6 lg:py-section">
       <div className="mx-auto max-w-6xl">
 
         {/* Header */}
@@ -416,7 +416,7 @@ export function FeaturesSection() {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease }}
-          className="mb-20"
+          className="mb-12 sm:mb-16 lg:mb-20"
         >
           <p className="type-caption-upper text-muted mb-4">What Counselly does</p>
           <h2 className="type-display-md text-ink max-w-xl">
@@ -515,7 +515,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Mobile: stacked */}
-        <div className="lg:hidden space-y-10">
+        <div className="space-y-10 lg:hidden sm:space-y-12">
           {features.map((f) => (
             <div key={f.n} className="space-y-5">
               <div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ArrowRight, UserCircle, Compass, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { CounsellyMark } from "@/components/brand/counselly-mark";
 import { Nav } from "@/components/layout/nav";
 import { SmoothScroll } from "@/components/layout/smooth-scroll";
@@ -50,13 +51,13 @@ export default function HomePage() {
       <Nav />
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section className="relative px-6 pt-16 pb-20 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-14 pt-10 sm:px-6 sm:pb-16 sm:pt-12 lg:px-6 lg:pb-20 lg:pt-16">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-x-24 xl:gap-x-32 lg:gap-y-0 items-center min-h-[82vh]">
+          <div className="grid min-h-0 grid-cols-1 items-center gap-10 sm:gap-12 lg:min-h-[82vh] lg:grid-cols-2 lg:gap-x-24 lg:gap-y-0 xl:gap-x-32">
 
             {/* Left: copy — capped width so headline aligns cleanly vs. mockup */}
             <div className="flex flex-col justify-center w-full min-w-0 lg:max-w-xl xl:max-w-2xl">
-              <div className="hero-reveal flex items-center gap-2.5 mb-10" style={revealDelay("80ms")}>
+              <div className="hero-reveal mb-6 flex items-center gap-2.5 sm:mb-8 lg:mb-10" style={revealDelay("80ms")}>
                 <span className="text-primary select-none" style={{ fontSize: "0.9rem" }} aria-hidden>✦</span>
                 <span className="type-caption-upper text-muted tracking-widest">AI-powered college counselling</span>
               </div>
@@ -67,25 +68,23 @@ export default function HomePage() {
                 <span className="hero-word" style={revealDelay("420ms")}>deserves.</span>
               </h1>
 
-              <div className="hero-reveal mt-10 pt-10 border-t border-hairline" style={revealDelay("560ms")}>
-                <p className="type-body-md text-body max-w-xs leading-relaxed mb-8">
+              <div className="hero-reveal mt-8 border-t border-hairline pt-8 sm:mt-10 sm:pt-10 lg:mt-10 lg:pt-10" style={revealDelay("560ms")}>
+                <p className="type-body-md text-body mb-6 max-w-xs leading-relaxed sm:mb-8">
                   Tell us where you want to go.<br />
                   We&apos;ll show you exactly how to get there.
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link
                     href="/auth"
-                    className="group subtle-sheen inline-flex items-center gap-2.5 px-8 font-medium font-sans rounded-md bg-primary text-on-primary hover:bg-primary-active transition-all duration-200 overflow-hidden"
-                    style={{ height: "3.25rem", fontSize: "1rem" }}
+                    className="group subtle-sheen inline-flex h-[3.25rem] w-full items-center justify-center gap-2.5 overflow-hidden rounded-md bg-primary px-8 font-sans text-base font-medium text-on-primary transition-all duration-200 hover:bg-primary-active sm:w-auto"
                   >
                     Start for free
-                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                   </Link>
                   <a
                     href="#features"
-                    className="premium-lift inline-flex items-center gap-2 px-8 font-medium font-sans rounded-md bg-canvas text-ink border border-hairline hover:bg-surface-soft transition-all duration-200"
-                    style={{ height: "3.25rem", fontSize: "1rem" }}
+                    className="premium-lift inline-flex h-[3.25rem] w-full items-center justify-center gap-2 rounded-md border border-hairline bg-canvas px-8 font-sans text-base font-medium text-ink transition-all duration-200 hover:bg-surface-soft sm:w-auto"
                   >
                     See how it works
                   </a>
@@ -93,22 +92,32 @@ export default function HomePage() {
               </div>
 
               {/* Stats */}
-              <div className="mt-14 flex gap-10">
+              <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-6 sm:mt-12 sm:flex sm:flex-wrap sm:gap-10 lg:mt-14">
                 {stats.map((s, i) => (
                   <div
                     key={s.label}
-                    className="hero-reveal-soft"
+                    className={cn(
+                      "hero-reveal-soft min-w-0",
+                      i === stats.length - 1 && "col-span-2 sm:col-span-1",
+                    )}
                     style={revealDelay(`${720 + i * 90}ms`)}
                   >
                     <p className="type-display-sm text-ink">{s.value}</p>
-                    <p className="type-body-sm text-muted mt-0.5">{s.label}</p>
+                    <p className="type-body-sm text-muted mt-0.5 max-w-[14ch] sm:max-w-none">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Product mockup — tablet + mobile (desktop uses right column) */}
+            <div className="flex w-full min-w-0 justify-center lg:hidden">
+              <div className="hero-visual relative w-full max-w-md sm:max-w-lg">
+                <DashboardMockup />
+              </div>
+            </div>
+
             {/* Right: product mockup — right-aligned in column for balance with left rail */}
-            <div className="hidden lg:flex lg:items-center lg:justify-end w-full min-w-0">
+            <div className="hidden w-full min-w-0 lg:flex lg:items-center lg:justify-end">
               <div className="hero-visual relative w-full max-w-lg xl:max-w-xl">
                 <DashboardMockup />
               </div>
@@ -126,11 +135,11 @@ export default function HomePage() {
       <FeaturesSection />
 
       {/* ── How it works ─────────────────────────────────── */}
-      <section id="how-it-works" className="py-section px-6 bg-surface-soft border-y border-hairline overflow-hidden">
+      <section id="how-it-works" className="overflow-hidden border-y border-hairline bg-surface-soft px-4 py-14 sm:px-6 sm:py-16 lg:px-6 lg:py-section">
         <div className="mx-auto max-w-6xl">
           <FadeIn>
             <p className="type-caption-upper text-muted mb-3">How it works</p>
-            <h2 className="type-display-md text-ink mb-16 max-w-md">
+            <h2 className="type-display-md text-ink mb-10 max-w-md sm:mb-12 lg:mb-16">
               From profile to acceptance,<br />step by step.
             </h2>
           </FadeIn>
@@ -139,8 +148,7 @@ export default function HomePage() {
             {steps.map((s, i) => (
               <FadeIn key={s.n} delay={i * 0.15}>
                 <div
-                  className="group relative flex flex-col rounded-xl bg-canvas border border-hairline p-8 overflow-hidden cursor-default transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
-                  style={{ minHeight: "20rem" }}
+                  className="group relative flex min-h-[16rem] flex-col overflow-hidden rounded-xl border border-hairline bg-canvas p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg sm:min-h-[18rem] sm:p-8 lg:min-h-[20rem]"
                 >
                   {/* Number watermark — peeks from bottom-right corner */}
                   <span
@@ -194,10 +202,10 @@ export default function HomePage() {
 
       {/* ── Product card ─────────────────────────────────── */}
       {/* ── Final CTA ────────────────────────────────────── */}
-      <section id="pricing" className="bg-canvas py-section px-6 pb-10">
+      <section id="pricing" className="bg-canvas px-4 py-14 pb-8 sm:px-6 sm:py-16 sm:pb-10 lg:px-6 lg:py-section lg:pb-10">
         <div className="mx-auto max-w-6xl">
           <FadeIn>
-            <div className="premium-lift relative overflow-hidden rounded-2xl border border-hairline bg-surface-card px-8 py-20 text-center sm:rounded-3xl sm:px-14 hover:border-primary/30">
+            <div className="premium-lift relative overflow-hidden rounded-2xl border border-hairline bg-surface-card px-6 py-14 text-center hover:border-primary/30 sm:rounded-3xl sm:px-14 sm:py-20">
               <CounsellyMark className="relative z-[1] mx-auto mb-7 h-12 w-auto opacity-20" decorative />
               <h2 className="type-display-lg relative z-[1] mb-4 text-ink">
                 Your counsellor is waiting.
